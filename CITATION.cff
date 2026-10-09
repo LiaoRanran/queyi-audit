@@ -1,0 +1,37 @@
+# CITATION.cff — machine-readable citation for the anonymous Queyi Audit reproduction package
+# Spec: CFF 1.2.0 (https://citation-file-format.github.io/)
+# NOTE (anonymity): the author field is deliberately "Anonymous" for double-blind review.
+cff-version: 1.2.0
+message: "If you use these datasets, the real-world benchmark, or the tooling, please cite this repository."
+title: "Caliber Drift and Capability Boundaries: An Audit Protocol for Software-Verification Evaluation"
+abstract: >-
+  A reproducibility package for auditing the evaluator: a measurement-drift algebra (caliber signature,
+  four drift types, seven axioms of which only two are independent), an identifiability/correctability/
+  sample-complexity boundary analysis, a 1,147-sample x 8-asset frozen detection matrix with four-state
+  verdicts (pass/fail/unknown/contradict), and a real-world benchmark of 110 reconstructed C++ defects
+  with NVD-verified CVE provenance.
+type: software
+authors:
+  - family-names: "Anonymous"
+    given-names: "Anonymous"
+    affiliation: "Anonymous Institution"
+license: Apache-2.0
+repository-code: "https://example.org/anonymous/queyi-audit"
+keywords:
+  - "evaluator auditing"
+  - "measurement drift"
+  - "benchmark validity"
+  - "C++ defect detection"
+  - "sanitizers"
+  - "reproducibility"
+version: "1.0.0"
+date-released: "2026-10-09"
+preferred-citation:
+  type: article
+  title: "Caliber Drift and Capability Boundaries: An Audit Protocol for Software-Verification Evaluation"
+  authors:
+    - family-names: "Anonymous"
+      given-names: "Anonymous"
+      affiliation: "Anonymous Institution"
+  year: 2027
+  notes: "Anonymous submission (companion paper: The Boundary of Evaluator Auditing)."

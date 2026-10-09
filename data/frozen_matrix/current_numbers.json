@@ -1,0 +1,863 @@
+{
+ "schema": "queyi-current-numbers/672h",
+ "revision": "681",
+ "generated_by": "672h W3（扩样后重算：holdout 41 / corpus 64；三路复现一致） ｜ 672k W6 统计重做已并入 ｜ 678 W3 增补 a5_experiments ｜ 681 W3 增补 repair_681（跨源标签修复 + legacy 归一化）并把类型级数字更新为 34/13 ｜ 692 W3 增补 692_environment / 692_fair_comparison / 692_llm_audit（环境配对 + 公平外部对比 + LLM 第四臂；均不新增正文数字）",
+ "generated_at": "2026-10-01",
+ "note": "本文件只放当前最新核心数字（672h 扩样后）。历史轨迹见 data/experiments/reveal_update_672f.json 与 reveal_update_671a.json；扩样登记见 data/holdout_reveal_5_672h.json 与 data/external_corpus_reveal_672h.json。",
+ "seed": 20260930,
+ "holdout": {
+  "rate_pct": 82.9,
+  "k": 34,
+  "n": 41,
+  "denominator": "catch+miss（可测真错样本；planted=true，unknown 不计）",
+  "cp95": [
+   67.9,
+   92.8
+  ],
+  "cp95_halfwidth_pp": 12.5,
+  "source": "data/holdout_reveal_5_672h.json（第 5 轮 reveal，seed 20260930）"
+ },
+ "corpus": {
+  "rate_pct": 62.5,
+  "k": 40,
+  "n": 64,
+  "denominator": "catch+miss（可测且非测量类；unknown 与 not_error 不计）",
+  "cp95": [
+   49.5,
+   74.3
+  ],
+  "all_samples_pct": 52.6,
+  "source": "data/external_corpus_reveal_672h.json（第 4 轮 reveal）"
+ },
+ "baseline_arms": {
+  "holdout": {
+   "fd": {
+    "k": 34,
+    "n": 41,
+    "rate_pct": 82.9,
+    "cp95": [
+     67.9,
+     92.8
+    ]
+   },
+   "static": {
+    "k": 1,
+    "n": 41,
+    "rate_pct": 2.4,
+    "cp95": [
+     0.1,
+     12.9
+    ]
+   },
+   "random_proxy": {
+    "k": 4,
+    "n": 41,
+    "rate_pct": 9.8,
+    "cp95": [
+     2.7,
+     23.1
+    ]
+   }
+  },
+  "corpus": {
+   "fd": {
+    "k": 40,
+    "n": 64,
+    "rate_pct": 62.5,
+    "cp95": [
+     49.5,
+     74.3
+    ]
+   },
+   "static": {
+    "k": 11,
+    "n": 64,
+    "rate_pct": 17.2,
+    "cp95": [
+     8.9,
+     28.7
+    ]
+   },
+   "random_proxy": {
+    "k": 14,
+    "n": 64,
+    "rate_pct": 21.9,
+    "cp95": [
+     12.5,
+     34.0
+    ]
+   }
+  },
+  "caveat": "Static=口径重分箱（非重跑）；Random†=仪器级代理（非真 B3），Δ 只作方向性读法"
+ },
+ "comparisons": {
+  "holdout_fd_vs_static": {
+   "delta_pp": 80.49,
+   "ci_pp": [
+    68.36,
+    92.62
+   ],
+   "mcnemar_p": 2.3283064365386963e-10,
+   "cohens_h": 1.976,
+   "n_paired": 41,
+   "discordant": {
+    "b_a_only": 33,
+    "c_b_only": 0,
+    "n_discordant": 33
+   },
+   "posthoc_power": 1.0,
+   "e_value": 252645135.0588
+  },
+  "holdout_fd_vs_random": {
+   "delta_pp": 73.17,
+   "ci_pp": [
+    59.61,
+    86.73
+   ],
+   "mcnemar_p": 1.862645149230957e-09,
+   "cohens_h": 1.6543,
+   "n_paired": 41,
+   "discordant": {
+    "b_a_only": 30,
+    "c_b_only": 0,
+    "n_discordant": 30
+   },
+   "posthoc_power": 1.0,
+   "e_value": 34636833.0323,
+   "caveat": "Random†=仪器级代理（非真 B3）；配对按 670a 口径重建"
+  },
+  "corpus_fd_vs_static": {
+   "delta_pp": 45.31,
+   "ci_pp": [
+    33.12,
+    57.51
+   ],
+   "mcnemar_p": 3.725290298461914e-09,
+   "cohens_h": 0.9685,
+   "n_paired": 64,
+   "discordant": {
+    "b_a_only": 29,
+    "c_b_only": 0,
+    "n_discordant": 29
+   },
+   "posthoc_power": 1.0,
+   "e_value": 17895697.0667
+  },
+  "corpus_fd_vs_random": {
+   "delta_pp": 40.62,
+   "ci_pp": [
+    28.59,
+    52.66
+   ],
+   "mcnemar_p": 2.9802322387695312e-08,
+   "cohens_h": 0.8501,
+   "n_paired": 64,
+   "discordant": {
+    "b_a_only": 26,
+    "c_b_only": 0,
+    "n_discordant": 26
+   },
+   "posthoc_power": 1.0,
+   "e_value": 2485513.4815,
+   "caveat": "Random†=仪器级代理（非真 B3）；配对按 670a 口径重建"
+  },
+  "llm_arm_glm4": {
+   "direction": "LLM 更好（c=6, b=0）",
+   "mcnemar_p_fixed_sample": 0.03125,
+   "e_value_anytime": 9.1429,
+   "reject_anytime": false,
+   "note": "固定样本显著（p=0.031）但任意时刻 e-process 未过 20 ⇒ 两种口径并列报"
+  },
+  "source": "data/experiments/stats_672k.json（W6 重做：规范库 + e-process + post-hoc power）"
+ },
+ "control_false_positive": {
+  "fp": 0,
+  "total": 11,
+  "rate_pct": 0.0,
+  "note": "673u 重算：旧值 fp=2（18.2%）全部来自 wunsequenced 恒 catch 缺陷——h3 与 h35 是 planted=false 的**对照**样本，被 `detect()` 的 `'unsequenced' in out.lower()` 判成 catch（`g++: error: unrecognized command-line option '-Wunsequenced'` 里的 'unsequenced' 被当成命中）。673u 修复后两条转为 unknown ⇒ 对照假阳性 2 → 0。真错检出率（34/41=82.9%）不受影响（这两条是对照，不进分母）。"
+ },
+ "defect_reinjection": {
+  "k": 6,
+  "n": 6,
+  "rate_pct": 100.0
+ },
+ "mutation_core": {
+  "killed": 110,
+  "n": 114,
+  "rate_pct": 96.5,
+  "cp95": [
+   91.3,
+   99.0
+  ],
+  "note": "内部指标，与检出率不同口径；672f 重跑（seed 20260928，全量 147 变异体）"
+ },
+ "rules_total": 67,
+ "cards_real": 42,
+ "ledger_events": 452,
+ "expansion_672h": {
+  "holdout_new_samples": 20,
+  "corpus_new_samples": 16,
+  "holdout_before": {
+   "k": 17,
+   "n": 21,
+   "rate_pct": 81.0
+  },
+  "corpus_before": {
+   "k": 26,
+   "n": 48,
+   "rate_pct": 54.2
+  },
+  "H1_holdout": "成立（Δ+80.49pp > 20pp 且 p=2.33e-10 < 0.05）",
+  "H2_corpus": "成立（Δ+45.31pp > 15pp 且 p=3.73e-09 < 0.05）",
+  "H3_ci_halfwidth": "成立（holdout CP95 半宽 12.5pp ≤ 15pp）",
+  "H4_subset_delta": {
+   "holdout_pp": 4.0,
+   "holdout_verdict": "与预注册一致（<20pp）",
+   "corpus_pp": 33.3,
+   "corpus_verdict": "超出预注册范围（≥20pp）⇒ 子集构成差异显著，如实登记"
+  },
+  "honest_caveats": [
+   "holdout 新样本全部取存量缺陷夹具（未新写代码），但 14/20 是 asan 类 ⇒ 构成偏移已按层报告",
+   "corpus 新样本为自撰片段（缺陷类别据公开清单，verified_source=false）⇒ 新子集检出率显著更高（H4 超范围，已登记）",
+   "未知/不可用样本一律不进分母（holdout 1 / corpus 12）"
+  ]
+ },
+ "sample_size_672k": {
+  "holdout": {
+   "±3pp": {
+    "p_hat": 0.8293,
+    "halfwidth_pp": 3,
+    "n": 635,
+    "cp95_at_n": [
+     79.84,
+     85.83
+    ]
+   },
+   "±5pp": {
+    "p_hat": 0.8293,
+    "halfwidth_pp": 5,
+    "n": 236,
+    "cp95_at_n": [
+     77.64,
+     87.61
+    ]
+   },
+   "±10pp": {
+    "p_hat": 0.8293,
+    "halfwidth_pp": 10,
+    "n": 61,
+    "cp95_at_n": [
+     71.91,
+     91.85
+    ]
+   }
+  },
+  "corpus": {
+   "±3pp": {
+    "p_hat": 0.625,
+    "halfwidth_pp": 3,
+    "n": 1032,
+    "cp95_at_n": [
+     59.47,
+     65.46
+    ]
+   },
+   "±5pp": {
+    "p_hat": 0.625,
+    "halfwidth_pp": 5,
+    "n": 378,
+    "cp95_at_n": [
+     57.34,
+     67.33
+    ]
+   },
+   "±10pp": {
+    "p_hat": 0.625,
+    "halfwidth_pp": 10,
+    "n": 97,
+    "cp95_at_n": [
+     52.48,
+     72.48
+    ]
+   }
+  }
+ },
+ "stats_672k_note": {
+  "posthoc_power": "FD 两个对照的观测功效都是 1.0（效应极大）；post-hoc power 不得当设计期功效",
+  "e_process": "FD 对比的 e-value 达 1.7e7~2.5e8（远超 Ville 阈值 20）⇒ 任意时刻也可拒绝",
+  "delta_for_planned_study": "±5pp 精度需 holdout 236 / corpus 378 样本（在观测 p̂ 处现算）"
+ },
+ "a5_experiments": {
+  "note": "A5 全量(676f) + clone-aware(677b) + 非退化池(677c) + 盲区地图(676g)。本段为 678 批次新增，与 VERSION.md §2 对齐；不改动上方 holdout/corpus 既有数字。",
+  "source_batches": [
+   "676f",
+   "677b",
+   "677c",
+   "676g"
+  ],
+  "full_pool_676f": {
+   "n": 566,
+   "fd_rate_pct": 54.59,
+   "random_rate_pct": 30.57,
+   "static_rate_pct": 24.74,
+   "delta_fd_vs_random_pp": 24.03,
+   "delta_fd_vs_static_pp": 29.85,
+   "ci_pp": [
+    20.5,
+    27.5
+   ],
+   "mcnemar_p": 2.3e-41,
+   "tie_analysis_delta_pp": 0.0,
+   "source": "data/a5_676f_results.json"
+  },
+  "clone_aware_677b": {
+   "splits_delta_pp": [
+    23.0,
+    26.7
+   ],
+   "splits_p_max": 4.1e-29,
+   "tie_delta_pp": [
+    -0.53,
+    0.0
+   ],
+   "effective_n": [
+    133,
+    140
+   ],
+   "design_effect": [
+    4.05,
+    4.26
+   ],
+   "ci_widening_x": [
+    1.78,
+    2.1
+   ],
+   "note": "clone-family-aware 重切分后主端点不降反略升，并列仍归零 ⇒ 模板泄漏已排除",
+   "source": "data/677b_a5_results_*.json, data/677b_cluster_bootstrap.json"
+  },
+  "nondegenerate_pool_677c": {
+   "strict_pool_k_significant": [
+    1,
+    2,
+    3
+   ],
+   "optimal_delta_pp": 11.31,
+   "optimal_p": 6.02e-08,
+   "k4_delta_pp": 0.0,
+   "k4_selection_collision": 0.2,
+   "degenerate_contribution_point_pp": 24.03,
+   "degenerate_contribution_to_mean_pp": 12.81,
+   "source": "data/677c_a5_nondegenerate_results.json"
+  },
+  "blindspot_676g": {
+   "n": 1147,
+   "catch": 707,
+   "miss": 440,
+   "blindspot_ratio_pct": 38.4,
+   "blind_types_gt_50pct": 13,
+   "total_types": 34,
+   "note": "681 归一化重算：类型级数字由 676g 的 18/70 更新为 13/34（样本级 707/440/38.4% 未变，标签列与观测列解耦）；旧值保留于 data/blindspot_676g_stats.json（历史口径）",
+   "superseded_676g_type_level": {
+    "blind_types_gt_50pct": 18,
+    "total_types": 70,
+    "source": "data/blindspot_676g_stats.json"
+   },
+   "source": "data/681_type_stats_normalized.json"
+  }
+ },
+ "repair_681": {
+  "note": "681 究极轮次：跨源标签修复（matrix/INDEX/manifest 重派生）+ legacy 标签归一化。只改派生件；权威逐样本 JSON 与样本源码零改动；观测字段（per_asset/or_verdict_all8/hung_flag）零改动。",
+  "source_batches": [
+   "681"
+  ],
+  "cross_source_consistency": {
+   "matrix_vs_auth_json_defect_type": 0,
+   "matrix_vs_auth_json_expected_verdict": 0,
+   "manifest_vs_auth_json_defect_type": 0,
+   "manifest_vs_auth_json_expected_verdict": 0,
+   "matrix_vs_676m_expected_verdict": 0,
+   "noncanonical_labels_remaining": 0
+  },
+  "changes": {
+   "defect_type_rows": 413,
+   "expected_verdict_rows": 34,
+   "legacy_labels_normalized": 38,
+   "observed_fields_touched": 0,
+   "expA_index_rows_fixed": 100
+  },
+  "type_stats_normalized": {
+   "n_types": 34,
+   "types_gt50_blind": 13,
+   "types_gt50_list": [
+    "cross_tu_ub",
+    "strict_aliasing",
+    "uninitialized_read",
+    "volatile_misuse",
+    "endianness",
+    "deadlock",
+    "algorithm_misuse",
+    "logic_error",
+    "interrupt_safety",
+    "virtual_function",
+    "linker_odr",
+    "condition_variable",
+    "atomic_ub"
+   ],
+   "sample_blind_pct": 38.4,
+   "check": "python tools/repair_681_labels.py --apply（幂等）"
+  },
+  "b5_expected_vs_actual_consistency_pct": 93.29,
+  "a5_stability": {
+   "delta_diff_pp": 0.0,
+   "basis": "矩阵 per_asset/or_verdict_all8 零改动（git diff 逐字段核验）"
+  },
+  "sources": [
+   "data/681_type_stats_normalized.json",
+   "data/681_标签修复日志.json",
+   "data/681_类型统计重算报告.md",
+   "data/681_归一化映射表.md"
+  ]
+ },
+ "reframed_689": {
+  "note": "689 究极重构轮：结构性重构 + 统计补全。全部数字来自既有冻结矩阵的确定性复算（不改观测字段），脚本 tools/equivalence_689.py 与 tools/environment_metrics_689.py。",
+  "source_batches": [
+   "689"
+  ],
+  "equivalence_tost": {
+   "real": {
+    "n": 110,
+    "catch": 65,
+    "rate_pct": 59.0909
+   },
+   "syn": {
+    "n": 1147,
+    "catch": 707,
+    "rate_pct": 61.6391
+   },
+   "diff_pp": -2.5481,
+   "se_pp": 4.9028,
+   "margin_pp": 10,
+   "ci90_pp": [
+    -10.61,
+    5.52
+   ],
+   "p_lower": 0.0643,
+   "p_upper": 0.0052,
+   "p_tost": 0.0643,
+   "equivalent": false,
+   "min_passing_margin_pp": 10.61,
+   "deff_adjusted": {
+    "design_effect": 4.26,
+    "min_passing_margin_pp": 11.67,
+    "tost_margin10_pass": false
+   },
+   "source": "data/689_equivalence_test.json（tools/equivalence_689.py）"
+  },
+  "standardized_analysis": {
+   "forward_r_syn_std_pct": 77.01,
+   "forward_diff_pp": -17.92,
+   "reverse_r_real_std_pct": 59.94,
+   "reverse_diff_pp": 1.7,
+   "type_forward_diff_pp": -13.52,
+   "type_reverse_diff_pp": 11.76,
+   "common_support_share_of_syn": 0.7977,
+   "family_mapping_source": "tools/repair_681_labels.py::FAMILY8",
+   "source": "data/689_standardized_analysis.json"
+  },
+  "environment_metrics": {
+   "real110_wsl_or_pct": 59.09,
+   "real110_native_or_pct": 23.64,
+   "delta_pp": -35.45,
+   "delta_unknown_pp": 0.0,
+   "clang_vs_gpp_200": {
+    "asan_agree_pct": 93.5,
+    "asan_kappa": 0.864,
+    "ubsan_agree_pct": 93.5,
+    "ubsan_kappa": 0.8434
+   },
+   "source": "data/689_environment_metrics.json（tools/environment_metrics_689.py）"
+  },
+  "paper": {
+   "title": "Auditing the Evaluator: Stress-Testing Evidence-Based Software Verification",
+   "main_text_pages": 8,
+   "total_pages": 36,
+   "abstract_words": 245,
+   "abstract_chars": 1776,
+   "compiled_with": "tectonic（0 错、0 未定义引用；页数经 pypdf 实测）"
+  },
+  "human_annotation": {
+   "status": "designed_not_executed",
+   "package_n": 145,
+   "human_iaa": 0,
+   "note": "AI self-consistency κ=0.727 不构成人类 IAA；第二标注待人类执行。"
+  },
+  "sources": [
+   "data/689_equivalence_test.json",
+   "data/689_standardized_analysis.json",
+   "data/689_environment_metrics.json",
+   "data/689_refactor_blueprint.md",
+   "data/689_human_annotation_protocol.md"
+  ]
+ },
+ "reframed_691": {
+  "note": "691 止损+建设轮：题名/公式表述/池计数三类修正 + 证据搬运 + 附录内容减法。无新实验；全部数字为既有冻结矩阵复算。",
+  "source_batches": [
+   "691"
+  ],
+  "title": "Caliber Drift and Capability Boundaries: An Audit Protocol for Software-Verification Evaluation",
+  "title_previous": "Auditing the Evaluator: Stress-Testing Evidence-Based Software Verification (retired in 691: 2026 collision with 'Auditing the Evaluators' PROPOR 2026 and 'Evaluator Stress Test' ACL Findings 2026)",
+  "formula": {
+   "original": "E[J]=kd/n",
+   "current": "E[J]=k|D|/|A|",
+   "relation": "mathematically identical; n in the original denotes the asset-pool size (=8). 689 recorded this as a 'hard fix'; 691 reclassifies it as SYMBOL DISAMBIGUATION (n means sample size elsewhere).",
+   "fit_limit": "the linear form Delta ~ c*k*|D|/|A| does not explain the |D|=0 residual (+3.06pp) => descriptive, not causal"
+  },
+  "pools": {
+   "pool_b_equals_pool_c": true,
+   "pool_b_assets": [
+    "asan",
+    "compiler-warn",
+    "cross-compile",
+    "linker",
+    "tsan",
+    "ubsan"
+   ],
+   "pool_c_assets": [
+    "asan",
+    "compiler-warn",
+    "cross-compile",
+    "linker",
+    "tsan",
+    "ubsan"
+   ],
+   "distinct_pools": 2,
+   "block_instances": 14,
+   "distinct_pool_x_k_blocks": 9,
+   "distinct_improving_tiers_vs_676f_fd": 1,
+   "best_improving_tier": {
+    "k": 4,
+    "delta_pp": 1.4134,
+    "p": 0.3019956131896645
+   },
+   "source": "data/677c_asset_pools.json + data/677c_evolution_operator_results.json"
+  },
+  "mechanism_level_poolA_vs_single_random": {
+   "k1": {
+    "assets": "asan vs tsan",
+    "delta_pp": 11.3074,
+    "mcnemar_p": 6.018771766031572e-08,
+    "delta_vs_random_mean_pp": 12.2566
+   },
+   "k2": {
+    "delta_pp": 7.4205,
+    "mcnemar_p": 7.692818848583101e-05,
+    "delta_vs_random_mean_pp": 10.0576
+   },
+   "k3": {
+    "delta_pp": 7.4205,
+    "mcnemar_p": 3.714641593828229e-06,
+    "delta_vs_random_mean_pp": 5.7794
+   },
+   "k4": {
+    "delta_pp": 0.0,
+    "mcnemar_p": 1.0,
+    "delta_vs_random_mean_pp": 1.6074,
+    "note": "set collision 1/C(5,4)=0.2"
+   },
+   "source": "data/677c_a5_nondegenerate_results.json::pools.A.k_blocks"
+  },
+  "label_kappa_ai_self_consistency": {
+   "defect_type": 0.726674,
+   "planted": 0.788771,
+   "expected_verdict": 0.437405,
+   "severity": 0.157421,
+   "n": {
+    "defect_type": 287,
+    "planted": 287,
+    "expected_verdict": 287,
+    "severity": 262
+   },
+   "note": "AI self-consistency only (25% blind AI re-label); human IAA = 0. expected_verdict and severity were UNREPORTED before 691.",
+   "source": "data/682_kappa.json"
+  },
+  "governance": {
+   "ledger_events": 452,
+   "rules": 67,
+   "rules_sha256_version": "1.0.0",
+   "ledger_events_carry_ruleset_hash": false,
+   "note": "tamper-evident current-state integrity with partial historical reproducibility; NOT immutable and NOT tamper-proof."
+  },
+  "paper": {
+   "main_text_pages": 8,
+   "total_pages": 35,
+   "appendix_pages": 23,
+   "abstract_words_gate_caliber": 229,
+   "abstract_chars": 1814,
+   "compiled_with": "tectonic (0 errors / 0 undefined refs); pages measured with pypdf"
+  },
+  "sources": [
+   "data/691_formula_audit.md",
+   "data/691_title_assessment.md",
+   "data/691_appendix_audit.md",
+   "data/691_evidence_relocation.md",
+   "data/691_kappa_analysis.md",
+   "data/691_governance_claim.md",
+   "data/691_standardization_highlight.md",
+   "data/691_overclaim_audit.md"
+  ]
+ },
+ "692_environment": {
+  "source": "data/692_environment_paired_experiment.json（脚本 tools/analyze_692_environment.py，只读冻结矩阵，0 次 detect）",
+  "protocol_version": "queyi-measurement-protocol/692",
+  "profiles": {
+   "wsl-gcc-13.3": {
+    "os": "Ubuntu 24.04.4 LTS (WSL2)",
+    "compiler_version": "13.3.0",
+    "sanitizer_runtime": "libasan.so/libubsan.so/libtsan.so (GCC 13, /usr/lib/gcc/x86_64-linux-gnu/13/)",
+    "container_image": null
+   },
+   "windows-native-mingw": {
+    "os": "Windows 11 (10.0.26200)",
+    "compiler_version": "13.1.0 / 22.1.8",
+    "sanitizer_runtime": "无（MinGW 不带 ASan 动态运行时；clang 缺 libclang_rt.asan_dynamic，689 已实测登记）",
+    "container_image": null
+   }
+  },
+  "frame": "A5 evaluation split n=566（同时算 real-world 110 锚点）",
+  "eval_566": {
+   "E1_wsl_full": {
+    "catch": 340,
+    "miss": 226,
+    "unknown": 0,
+    "catch_rate_pct": 60.0707,
+    "conditional_recall_pct": 60.0707
+   },
+   "E2_native_unaware": {
+    "catch": 140,
+    "miss": 426,
+    "unknown": 0,
+    "catch_rate_pct": 24.735
+   },
+   "E2_native_aware": {
+    "catch": 140,
+    "miss": 0,
+    "unknown": 426,
+    "unknown_rate_pct": 75.265,
+    "conditional_recall": "undefined（分母 0：无可信负例）"
+   },
+   "delta_catch_rate_pp_unaware": 35.3357,
+   "delta_unknown_pp_unaware": 0.0,
+   "delta_unknown_pp_aware": -75.265,
+   "mcnemar": {
+    "b_e1_only": 200,
+    "c_e2_only": 0,
+    "exact_p": 1.2446030555722283e-60,
+    "delta_ci95_pp_wald": [
+     31.3976,
+     39.2738
+    ]
+   },
+   "silent_signature": {
+    "lost_e1_catches": 200,
+    "lost_share_of_e1_catch_pct": 58.8235,
+    "e2_reported_negatives": 426,
+    "e2_negatives_that_e1_catches": 200,
+    "share_of_e2_negatives_pct": 46.9484
+   }
+  },
+  "real_world_110_anchor": {
+   "E1_pct": 59.0909,
+   "E1_catch": 65,
+   "E2_pct": 23.6364,
+   "E2_catch": 26,
+   "lost_e1_catches": 39,
+   "anchor_matches_688": true
+  },
+  "capability_retreat_sweep": {
+   "n_configs": 63,
+   "n_configs_with_unsound_negatives": 62,
+   "window_counts_by_retention": {
+    "100_pct": 0,
+    "99_pct": 0,
+    "95_pct": 1,
+    "90_pct": 7,
+    "80_pct": 18,
+    "50_pct": 49
+   },
+   "widest_silent_window": {
+    "missing_assets": [
+     "linker"
+    ],
+    "retention_pct": 98.8236,
+    "unsound_negatives": 22
+   },
+   "denominator_pathology_extreme": {
+    "config": "keep linker only",
+    "catch_rate_pct": 0.707,
+    "conditional_recall_pct": 100.0
+   }
+  },
+  "note": "E2 的 3 资产为实测（Windows 冻结列）；E2 的 unknown 为协议层判定。conditional_recall 在 E2 不可计算。"
+ },
+ "692_fair_comparison": {
+  "source": "data/692_fair_comparison_results.json（脚本 tools/run_692_fair_comparison.py；协议先落盘 data/692_fair_comparison_protocol.md）",
+  "frame": {
+   "n": 566,
+   "runnable": 538,
+   "no_source_unknown": 28,
+   "declared_positives": 322,
+   "declared_negatives": 244
+  },
+  "tools": {
+   "clang-tidy": "LLVM 22.1.8 (MSYS2/MinGW, Windows native)",
+   "cppcheck": "2.21.0 (MSYS2/MinGW, Windows native, 本批安装)"
+  },
+  "calibers": {
+   "T1_clang_tidy_C_main": {
+    "conditional_recall_pct": 94.1176,
+    "false_report_rate_pct": 97.4026,
+    "frame_coverage_pct": 94.8763,
+    "zero_discrimination": true
+   },
+   "T2_clang_tidy_C_A": {
+    "conditional_recall_pct": 34.9673,
+    "false_report_rate_pct": 13.8528,
+    "frame_coverage_pct": 94.8763,
+    "zero_discrimination": false
+   },
+   "T3_cppcheck_warning": {
+    "conditional_recall_pct": 49.6732,
+    "false_report_rate_pct": 18.1034,
+    "frame_coverage_pct": 95.053,
+    "zero_discrimination": false
+   },
+   "T4_cppcheck_broad": {
+    "conditional_recall_pct": 50.6536,
+    "false_report_rate_pct": 19.3966,
+    "frame_coverage_pct": 95.053,
+    "zero_discrimination": false
+   }
+  },
+  "queiy_or_reference": {
+   "conditional_recall_pct": 93.7888,
+   "false_report_rate_pct": 15.5738,
+   "frame_coverage_pct": 100.0
+  },
+  "cross_disagreement": {
+   "T1_clang_tidy_C_main": {
+    "queyi_catch_tool_silent": 18,
+    "tool_report_queyi_no_catch": 213,
+    "tool_silent_by_group": {
+     "optimization_sensitive": 7,
+     "language_semantics": 5,
+     "odr_link": 5,
+     "memory_safety": 1
+    }
+   },
+   "T2_clang_tidy_C_A": {
+    "queyi_catch_tool_silent": 209,
+    "tool_report_queyi_no_catch": 30,
+    "tool_silent_by_group": {
+     "stl": 60,
+     "concurrency": 57,
+     "undefined_behavior": 22,
+     "embedded": 17,
+     "real_world": 15,
+     "language_semantics": 11,
+     "legacy": 7,
+     "optimization_sensitive": 7,
+     "memory_safety": 5,
+     "odr_link": 5,
+     "conditional_trigger": 3
+    }
+   },
+   "T3_cppcheck_warning": {
+    "queyi_catch_tool_silent": 160,
+    "tool_report_queyi_no_catch": 36,
+    "tool_silent_by_group": {
+     "concurrency": 58,
+     "stl": 27,
+     "real_world": 25,
+     "embedded": 17,
+     "undefined_behavior": 12,
+     "legacy": 6,
+     "language_semantics": 5,
+     "memory_safety": 5,
+     "odr_link": 5
+    }
+   },
+   "T4_cppcheck_broad": {
+    "queyi_catch_tool_silent": 157,
+    "tool_report_queyi_no_catch": 39,
+    "tool_silent_by_group": {
+     "concurrency": 58,
+     "stl": 27,
+     "real_world": 25,
+     "embedded": 16,
+     "undefined_behavior": 11,
+     "legacy": 6,
+     "language_semantics": 5,
+     "odr_link": 5,
+     "memory_safety": 4
+    }
+   }
+  },
+  "note": "观察性对比（convergent validity），非排行榜；不 claim superiority。T2 为 673e 事后口径，本批先声明为探索性。"
+ },
+ "692_llm_audit": {
+  "source": "data/692_llm_audit_results.json（脚本 tools/run_692_llm_audit.py；协议 data/692_llm_audit_protocol.md）",
+  "design": {
+   "n_selected": 80,
+   "seed": 6921,
+   "models": [
+    {
+     "slot": "A_glm-4.5",
+     "model_id": "glm-4.5"
+    },
+    {
+     "slot": "B_glm-4-flash",
+     "model_id": "glm-4-flash"
+    }
+   ],
+   "prompts": [
+    "p1",
+    "p2"
+   ],
+   "temperature": 0,
+   "calls_recorded": 480
+  },
+  "per_model": {
+   "A_glm-4.5": {
+    "conditional_recall_pct": 100.0,
+    "false_report_rate_pct": 72.0,
+    "prompt_invariance_pct": 87.5,
+    "ece": 0.2927,
+    "contradiction_n": 1,
+    "unknown_n": 18
+   },
+   "B_glm-4-flash": {
+    "conditional_recall_pct": 95.0,
+    "false_report_rate_pct": 85.0,
+    "prompt_invariance_pct": 96.25,
+    "ece": 0.45,
+    "contradiction_n": 0,
+    "unknown_n": 0
+   }
+  },
+  "cross_asset": {
+   "A_glm-4.5": {
+    "agreement_pct": 66.129,
+    "jaccard_catch": 0.6182,
+    "llm_only_catch": 21,
+    "sanitizer_only_catch": 0
+   },
+   "B_glm-4-flash": {
+    "agreement_pct": 52.5,
+    "jaccard_catch": 0.4795,
+    "llm_only_catch": 37,
+    "sanitizer_only_catch": 1
+   }
+  },
+  "note": "LLM = 第 4 类 evidence asset，非 oracle；truth 参照为 expected_verdict；人类 IAA 仍为 0。"
+ }
+}

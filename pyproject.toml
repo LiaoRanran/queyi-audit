@@ -1,0 +1,251 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "queyi-audit-toolchain"
+version = "1.0.0"
+description = "《现代 C++ 终极圣经》生产级工具链：门禁、构建、发布、本地开发一体化 CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "The Authors", email = "anonymous@example.com"}
+]
+keywords = ["cpp", "documentation", "toolchain", "ci", "mkdocs", "pandoc"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    # 核心门禁（gate_engine / 原子内核）运行时依赖标准库 + PyYAML；
+    # 528 任务5 显式化：此前 yaml 仅在 dev extras，核心安装跑 gate_engine 会 ImportError。
+    "pyyaml>=6.0",
+    # 以下为建设站点/发布所需
+    "mkdocs-material>=9.5.0",
+    "mkdocs-mermaid2-plugin>=1.1.0",
+]
+
+[project.optional-dependencies]
+# PDF/EPUB 发布（CI 与本地 WSL）
+pdf = [
+    "pypandoc>=1.13.0",
+]
+# 本地开发与 lint
+dev = [
+    "pytest>=7.0",
+    "pytest-xdist>=3.0",   # 508 任务1：并行跑测试（pyproject addopts 里已启用 -n auto）
+    "ruff>=0.5.0",
+    "mypy>=1.10.0",
+    # 554 批次 T：工业级测试库（纯 Python wheel、无编译、无系统库）
+    "hypothesis>=6.100",   # T1 stateful 自动攻击 task_queue / T3 parser 差分生成器
+    "syrupy>=4.7",         # T2 结构化输出快照锁（零依赖 pytest 快照插件）
+]
+# CI 额外（PageFind 通过 pip 安装二进制扩展）
+ci = [
+    "pagefind[extended]>=1.1.0",
+]
+# 一键全装
+all = [
+    "queyi-audit-toolchain[pdf,dev,ci]",
+]
+
+[project.scripts]
+cppbible = "tools.cppbible:main"
+
+[project.urls]
+Homepage = "https://anonymous.github.io/queyi-audit"
+Repository = "https://anonymous/queyi-audit"
+
+[tool.setuptools]
+# 不打包 Book/ 等大量文件，仅暴露 CLI
+py-modules = ["tools.cppbible"]
+
+[tool.cppbible]
+# ⚠️ 工具链**不由本段决定**：唯一事实源是仓库根 toolchain.toml
+# （由 tools/toolchain.py 解析：prefer 列表 → PATH 回退 → 内置兜底，缺配置永不崩）。
+# 此处原先硬编码的本机绝对路径（C:/Users/...、C:/Qt/...）无任何代码读取（死配置），
+# 只会误导读者以为换机器要改这里，已移除；换机器请改 toolchain.toml 或设环境变量。
+clang = "clang++"
+parallel_workers = 8
+compile_std = "c++23"
+# 核心门禁清单（按执行顺序）
+quality_gates = [
+    "tools/preflight_check.py",
+    "tools/consistency_check.py",
+    "tools/crossref_audit.py",
+    "tools/xref_check.py",
+    "tools/gen_indexes.py --check",
+    "tools/density_audit.py --check 20",
+    "tools/d5_appendix_audit.py",
+    "tools/d5_source_integrity.py --check",
+    "tools/terminology_normalize.py --check",
+    "tools/exercise_dup_guard.py",
+    "tools/verify_asm_evidence.py --root Book --examples Examples",
+    "tools/book_asm_freshness.py",
+    "tools/structure_audit.py --check",
+    "tools/sweep_fences.py --check",
+    "tools/whitespace_fix.py --check",
+    "tools/s10_verify_mark.py --check",
+    "tools/writer_selfcheck.py --all",
+    "tools/fix_book_links.py --check",
+    # 原子内核（G1-G3）新增门禁；与 tools/cppbible.py:cmd_check 的 quality 元组一一对应
+    # （一致性由 tools/gate_engine.py --manifest-check 校验，ADR-0004 收敛双清单）
+    "tools/atom_coverage_map.py --check --check-doc",
+    # 373 §5（2026-09-13）收编：Book ↔ 原子双向同步（与 cppbible.py quality 元组对齐）
+    "tools/book_atom_sync.py --check",
+    "tools/atom_evidence_replay.py --check",
+    "tools/gate_engine.py --check",
+    "tools/golden_lock.py check",
+    "tools/debt_ledger.py check",
+    "tools/poison_drill.py",
+    # 494 任务 6：对抗回归看板（本地沙箱探针实跑；CI 无 _adv_*/ 时自动空转 exit 0）
+    "tools/adversarial_regression.py",
+    # 498 任务 3：核心工具完整性校验（基准 tools/.tool_checksums 入库）
+    "tools/tool_integrity.py",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# 570 任务 2：**钉死规则集**。此前没配 `select` ⇒ 告警数随 ruff 版本漂移：
+#   本机 ruff==0.16.5 不配 select 时报 914 项，而经典默认集（E4/E7/E9/F）报 22 项（568 已清零）。
+#   钉死这四组，让"存量债"有一个**可复现**的口径；其余规则（I/SIM/UP/...）要清另开一批分批做。
+# 570 钉基线 → 573 任务 B 后启用两族（均已清零：I001 127 处、FURB167 93 处）。
+select = ["E4", "E7", "E9", "F", "I001", "FURB167"]
+
+# ── **永久不开**的族（理由写死，免得后人重复争论）─┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+#   RUF001/002/003  ：中文全文，歧义字符 2 万+，纯噪声（文档/断言里中文是内容不是代码）。
+#   T201 / print    ：这 44 个工具本来就是 CLI，禁止 print 是无意义的自伤。
+#   S101 / assert   ：测试与断言本就要 assert；门禁工具自身也用 assert 做不变量。
+#   CPY001          ：版权头，与本项目无关。
+#   D* / ANN*       ：docstring 与类型注解，另开一批按文件推进（量大且需人审措辞）。
+#   Q000            ：引号风格 churn，会淹没真实改动。
+#   PTH123 / PTH118 ：573 实测 ruff **未标记为安全可修**（只报告、不改），且涉及 open/join 的
+#                     语义等价替换需人核 ⇒ 归入交人清单（见 docs/kernel/subprocess_audit.md 同批做法）。
+#   PLW1510 / S603  ：subprocess 安全族，**只审计不改逻辑**（自动加 check=True 会改变容错行为）
+#                     ⇒ 清单见 docs/kernel/subprocess_audit.md。
+#   SIM115 / UP031 / DTZ005 / BLE001 / ISC004 / RUF100 / UP009 / UP035 / PIE810 / SIM103
+#                   ：量较大或需逐处判断，留待后续按族分批（每批独立 commit + pytest）。
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+
+# 625 A1：types-PyYAML 非本仓依赖（CI 只装 PyYAML 运行库，无 stub）⇒ yaml.* 允许缺 stub，
+# 否则 `import yaml` 在 7 处报 import-untyped，CI quality 恒红。属环境性 stub 缺口的集中声明。
+[[tool.mypy.overrides]]
+module = "yaml.*"
+ignore_missing_imports = true
+
+# 666 A1：`opentimestamps` 同样是**可选的第三方库**（656 A 用它交叉核对官方 magic；
+# 没装时 656 走冻结常数兜底）。装了它以后 mypy 报 5 处 import-untyped
+# （`opentimestamps{,.calendar,.core.timestamp,.core.serialize,.core.op}` 无 py.typed / stub），
+# 与 yaml.* 同因同款 ⇒ 同口径集中声明，而不是在 5 处代码里散写 `# type: ignore`
+# （那会撞 625 的"无批量 ignore"预算，也是把环境缺口伪装成代码债）。
+# 注：改本文件必须 `python tools/tool_integrity.py --update` 重钉（pyproject 在 test_config 哈希面内）。
+[[tool.mypy.overrides]]
+module = "opentimestamps.*"
+ignore_missing_imports = true
+
+# 693-D1：`tools/utils/` 是 693 新建的共用基础设施包（异常 / 日志 / 缓存数据访问）。
+# 脚本与测试以 `sys.path.insert(0, 'tools')` 引入它 ⇒ mypy 从仓库根解析不到 `utils.*`。
+# 与 yaml.* / numpy.* 同因同款（**环境性解析缺口**，不是本仓代码债）⇒ 同口径集中声明，
+# 而不是在十余处 import 上散写 `# type: ignore`。
+# 注：改本文件须 `python tools/tool_integrity.py --update` 重钉（pyproject 在 test_config 哈希面内）。
+[[tool.mypy.overrides]]
+module = "utils.*"
+ignore_missing_imports = true
+
+# 672h 系统硬化：`numpy` 的 stub 缺口（**环境性**，不是本仓代码债）。
+# 病根：numpy 2.5.x 的 `__init__.pyi` 用 Python 3.12+ 的 `type` 语句，而本仓 mypy pin
+# `python_version = "3.11"` ⇒ mypy 在解析该 stub 时直接 `[syntax]` 报错并 **Bail**，
+# 整个 `mypy tools/` 检查被阻断（0 个真实错误被看到）。触发链：tools/result_cache_655.py
+# 与 tools/test_fast_gate.py 顶层 `import pytest` ⇒ mypy 跟进 pytest ⇒ pytest 的断言重写
+# 模块连带 import numpy ⇒ 撞上 stub 语法。
+# 处置与 yaml.* / opentimestamps.* 同款（集中声明环境缺口，不在代码里散写 ignore）：
+# `follow_imports = "skip"` ⇒ numpy 子树完全不解析（本仓无一行 numpy 代码，跳过它不损失检查力）。
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+
+# 同上：真正的触发链是 **pytest**（tools/result_cache_655.py 与 tools/test_fast_gate.py 顶层
+# `import pytest`）。本仓不需要对 pytest 内部做类型检查 ⇒ 不跟进它的子树（连带掐断
+# pytest→numpy 的解析），比逐库打补丁更稳。@pytest.mark / fixture 等**用法**检查不受影响
+# （那些由 pytest 的 .pyi 提供，仍在解析面内；只有 pytest 内部的实现模块被跳过）。
+# 680 A 收口：CI quality job 只装 pyyaml+hypothesis（**不装 pytest**）⇒ 仅
+# `follow_imports="skip"` 不足以免除 import-not-found（本地装了 pytest，长期看不见）。
+[[tool.mypy.overrides]]
+module = ["pytest", "pytest.*", "_pytest", "_pytest.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+# 680 A 新增：`tools/audit_676k_source.py` 顶层 `import requests`；CI quality job 未装
+# requests ⇒ mypy 报 import-untyped/import-not-found（本地装了 requests 且带 py.typed，
+# 故长期看不见）。与 yaml.* / opentimestamps.* 同款：集中声明环境缺口，不散写 ignore。
+[[tool.mypy.overrides]]
+module = ["requests", "requests.*"]
+ignore_missing_imports = true
+
+# 666 A1 备注：660 B6 把协议内核 canonical 迁到 queyi-verifier 后，本仓
+# `tools/queyi_core_*.py` / `tools/queyi_data_models_645.py` 是**薄 wrapper**
+# （importlib 动态装载 → 转发符号）⇒ mypy 在**使用方**报一串
+# `Module has no attribute "..."`（实测 25 个文件 67 条）。
+# 该形态问题**在 wrapper 文件里**用 PEP 562（`if TYPE_CHECKING: def __getattr__`）
+# 解决，不在这里配 overrides —— 实测 `module = "queyi_core_*"` 这种局部通配
+# 不合法（mypy 要求每段是完整模块名：`spam.*.eggs.*`）。
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tools"]   # 与 tests/conftest.py 的 sys.path 注入等效（pytest>=7）
+# 508 任务1 复盘：**默认保持串行**，并行走"两阶段"命令（理由见下）。
+#
+# 为什么不在 addopts 里放 `-n auto`（实测结论）：
+#   1. 本套测试有 ~14 个模块共享**真实仓库可变状态**——replay 的全局锁
+#      （`build/.replay_lock`）与校验期间"删旧工件→重生成→比 sha→还原"对
+#      `Examples/atoms/*.asm` 的瞬时改写。32 路并发下实测报
+#      `⚠️ replay 锁被占用超时`（infra_error:replay_busy）⇒ 假红。
+#   2. 尝试用 xdist 官方 `--dist loadgroup` + `xdist_group("serial")` 把它们钉进同一
+#      worker：**实测无效**（同组测试仍散在 gw0/gw1/gw2/gw3）。分组依赖调度器能看到
+#      item 上的 marker，而本版本（xdist 3.8）经 controller 侧调度时读不到。
+#   3. 因此把"并行"改为**按标记切分两阶段**执行（不依赖分组，构造上安全）：
+#         pytest -m "not slow" -n auto     # 纯逻辑，并行安全
+#         pytest -m slow -n0               # 共享锁/工件，串行
+#      墙钟（589 任务4b 实测，Windows 本机 **32 核**，2026-09-19；命令即上面两条：
+#        fast `-n auto` 两次 = 87.3s / 86.8s（各 464 passed, 2 skipped）；
+#        slow `-n0` = 644.8s（334 passed / 1 failed = test_golden_lock_json 预期红））：
+#        ⇒ 参考区间 fast ≈ 85–90s、slow ≈ 10–11 min。**会随机器负载/核数漂移，是参考值、非契约。**
+#      （旧注释的 ~10s / ~140s 是更早的粗估，与实测相差大，589 已更正。）
+#      CI 的 pytest job 用的就是这两条命令。
+# 串行全量想临时改并行：`pytest -n auto -m "not slow"` 只跑纯逻辑部分。
+#
+# 559 Part C · 临时目录移入仓内（`.pytest_tmp/`，已进 .gitignore）：
+#   实现**不在 addopts**，而在 `tests/conftest.py::pytest_configure`——每次运行给一个
+#   **全新子目录**（`run-<pid>-<ts>`）。为什么不写 `--basetemp=.pytest_tmp`（提示词原处方）：
+#   `--basetemp` 指固定目录时 pytest 每次启动会 rmtree 掉它，第二次运行必撞本环境的删除
+#   拦截层（实测 fixture 整片 ERROR），详见 conftest 那段注释里的实测记录。
+#   `tmp_path_retention_policy`（pytest 7+ 的 ini 名，本机 pytest 9.1.1 实测存在）设 none：
+#   万一有人显式传 --basetemp 走回编号目录模式，也不留一堆历史会话 tmp（默认 all 会累积）。
+tmp_path_retention_policy = "none"
+# 673b C4：加 `--tb=short`（简洁回溯；fast_gate 显式传 `--tb=line` 会覆盖它）。
+# **不加 `--maxfail=1`**（诚实登记的理由）：本地跑门禁时"一次看全所有失败"比早退更有价值
+#   （672h 就是靠全量失败清单定位 36 条预存红）；快速失败放在 CI 的 pytest job 里
+#   （`.github/workflows/ci.yml`：`-m "not slow" -n 16 --maxfail=1`），
+#   本地要早退可用 `python tools/fast_gate.py --maxfail 1`。
+addopts = "-q --tb=short"
+# 672h：slow 标记正式登记（此前 pytest 对 @pytest.mark.slow 报 PytestUnknownMarkWarning）。
+# 语义：单测耗时 >10s 的测试（WSL 编译 / 全量变异 / 全量重跑 / 大数据生成类）。
+# 本地快档 `pytest -m "not slow"`（tools/fast_gate.py 默认）跳过它们；CI 的 `-m slow` 档覆盖。
+markers = [
+    "slow: 耗时>10s 的测试（WSL 编译/全量重跑类）；本地默认跳过，CI 慢档覆盖",
+]

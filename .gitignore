@@ -1,0 +1,14 @@
+# Build products (kept out of the repository, matching the source repo's convention)
+*.pdf
+*.log
+*.aux
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/

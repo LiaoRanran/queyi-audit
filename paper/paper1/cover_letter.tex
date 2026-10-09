@@ -1,0 +1,119 @@
+% =====================================================================
+%  Cover letter — Queyi, NeurIPS 2027 Evaluations & Datasets (E&D) submission
+%  v1.7 (703): FULL REWRITE. The v1.6 letter led with the empirical audit only;
+%      this version leads with the four claims the paper now actually makes
+%      (measurement-drift algebra; structural/passive Goodhart in four types;
+%      capability-boundary map; real-CVE validation) and folds in the 700-batch
+%      theory (axiom independence + incompleteness, information-theoretic lower
+%      bound / dual design) plus the 699/700-D cross-domain evidence.
+%      - TITLE: unchanged from the paper (v1.5/691). The prompt-era working title
+%        "Auditing the Evaluator" was RETIRED in v1.5 after a 2026 collision check
+%        ("Auditing the Evaluators" PROPOR 2026; "Evaluator Stress Test" ACL
+%        Findings 2026; DeepFact "audit-then-score"; BabelJudge "reliability audit
+%        framework"). The letter must carry the paper's own title verbatim.
+%      - New numbers folded in (all from frozen artifacts, no new detect()):
+%        +24.03pp apparent gain collapses at k=4 (0.00pp, p=1.0) once degenerate
+%        assets are removed; environment-aware protocol 60.07% -> 24.74% with
+%        delta-unknown 0.00pp (unaware) vs 75.27pp (aware); evolution operator
+%        Delta=0 at every tier (identical to greedy set-cover); paired designs
+%        have identically zero power against Type III/IV (psi=0) => dual design.
+%      - Honest declarations kept and extended: human IAA = 0 (package prepared,
+%        not executed); the axiom system is INCOMPLETE (A8 missing); 22 original
+%        open-source projects collected in batch 699 have NOT been compiled.
+%      - Narrative body <= 500 words (counted from "To the NeurIPS" to "The Authors").
+%  v1.6 (692): environment-aware paired experiment numbers; 5 findings.
+%  v1.5 (691): title change (caliber drift / capability boundaries); formula
+%      reclassified as symbol disambiguation; "three pools" corrected to two
+%      distinct pools / 9 distinct blocks.
+%  v1.4 (689): STRUCTURAL REFRAME -> audit framing; three contributions;
+%      evolution hypothesis failure reported as Finding 5.
+%  Version of record: research/latex/VERSION.md. Compile: tectonic cover_letter.tex
+%  Mirrors research/cover_letter.md v1.7 (703) --- numbers must match verbatim.
+% =====================================================================
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{parskip}
+
+\begin{document}
+
+\begin{flushright}
+  \today
+\end{flushright}
+
+\noindent
+To the NeurIPS Evaluations \& Datasets Chairs and Reviewers,
+
+\bigskip
+\noindent
+We submit \textbf{``Caliber Drift and Capability Boundaries: An Audit Protocol for
+Software-Verification Evaluation''} to the \textbf{Evaluations \& Datasets (E\&D)} track
+(2027 edition). \emph{Throughout, ``verifier'' is used in the
+evidence-acquisition sense}: a \texttt{catch} reports refuting evidence acquired within
+our capability boundary, \textbf{not} semantic truth.
+
+\paragraph{Template note.}
+The 2027 CFP is unreleased; this draft uses the official \texttt{neurips\_2025} style as
+an unmodified placeholder with a neutral ``Under review'' notice.
+
+\paragraph{Why this fits E\&D.}
+An \emph{evaluation methodology} with a reproducible artifact and a substantial
+\emph{negative} result. We claim no new detector and no algorithmic superiority. Our
+question: \emph{how often can an apparently convincing evaluation result survive an audit
+of the evaluator that produced it?}
+
+\paragraph{Four contributions.}
+(1)~\textbf{A measurement-drift algebra}: seven axioms and six theorems; our metatheory
+shows only \textbf{two} axioms are independent (monotonicity, super-additivity), four are
+theorems and one is a meta-axiom, and the system is \textbf{incomplete}---label drift
+(Type~III) cannot be expressed, so we register a missing \textbf{A8 (label-axis closure)}
+and prove caliber arbitrage NP-hard with a greedy $(1{-}1/e)$ approximation.
+(2)~\textbf{Structural (passive) Goodhart}, in four types
+(caliber/composition/label/aggregation), each moving the reported number with \emph{no}
+optimisation pressure; Types~III and IV leave \emph{every} per-sample verdict unchanged.
+(3)~\textbf{A capability-boundary map}: the instrument is blind to \textbf{38.4\%}
+($440/1147$) of its corpus, \textbf{13 of 34} defect types exceed $50\%$ blindness, and
+\textbf{41.5\%} of real-defect catches ride on one asset.
+(4)~\textbf{Real-CVE validation}: \textbf{110} NVD-verified CVE reconstructions detect at
+\textbf{59.09\%}.
+
+\paragraph{Key audited numbers.}
+A $+24.03$pp apparent selection gain \emph{collapses at $k{=}4$} ($0.00$pp, $p{=}1.0$)
+once degenerate assets are removed, leaving $+7.4$--$11.3$pp. Under the
+environment-aware protocol the declared profile gives $60.07\%$ and the reduced profile
+$24.74\%$ (566-sample split), with $\Delta$unknown $=0.00$pp unaware versus $75.27$pp
+aware---a \emph{silent} degradation. The evolution operator is $\Delta{=}0$ at
+\emph{every} tier (identical to greedy set-cover). Paired designs have identically
+\textbf{zero power} against Types~III/IV ($\psi{=}0$), so Step~3 becomes a \emph{dual}
+design: sample-level pairing for I/II (Type~I needs $n\approx849$, Type~II only $17$),
+design-level contrast for III/IV.
+
+\paragraph{What we do \emph{not} claim.}
+No priority (DeepFact, metric co-evolution, certified self-evolution and SV-COMP witness
+validation are neighbours); no superiority over mature verifiers; no semantic
+verification; and \textbf{no human label validation}---human IAA is \textbf{0}, all
+$\kappa$ values are AI self-consistency, and a de-identified 145-sample annotation package
+ships unexecuted. Two gaps stay open: the axiom system is \textbf{incomplete} (A8
+missing), and of \textbf{22} original open-source projects collected for cross-domain
+validation \textbf{none has been compiled} (no network egress); build feasibility is
+untested.
+
+\paragraph{Reproducibility.}
+Apache-2.0, DCO-signed, fail-loud scripts; every headline number recomputed from frozen
+matrices. Declared limits: a WSL-bound primary profile (the native profile's sanitizer
+absence is an architectural inference; clang-cl/MSVC untested); template-clone dependence
+(design effect $\approx4.2$); $\sim$5\% per-cell run instability; an eight-asset scope.
+
+\medskip
+\noindent
+We hope the E\&D community finds the \textbf{audit protocol and negative findings}
+useful beyond C++ verification.
+
+\bigskip
+\noindent
+Sincerely,\\
+The Authors
+
+\end{document}
