@@ -113,6 +113,11 @@ python ../../tools/sample_size_calculator.py --type II               # 700-C sam
   is **not** part of this package; only the frozen matrices and their analyses are.
 - Files under `data/frozen_matrix/` are **read-only sources of record**. Tools fail closed rather
   than silently recomputing them.
+- **`Scripts/*.sh` need `pytest` on the interpreter they actually pick.** `reproduce_all.sh`
+  prefers `python3`; under Windows+WSL that resolves to `/usr/bin/python3` inside WSL, where a
+  Windows-side `pip install pytest` has no effect. Symptom: S3 prints
+  `/usr/bin/python3: No module named pytest` and the stage is marked FAIL. Install `pytest`
+  *inside the same interpreter* (e.g. `wsl -d Ubuntu -- python3 -m pip install pytest`).
 - **`Scripts/reproduce_all.sh` completes (exit 0), but two of its stages are *registered as
   skipped*** — they are written to `<out>/99_skipped.txt` and surfaced in the generated report,
   never silently passed:
