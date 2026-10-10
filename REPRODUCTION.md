@@ -113,3 +113,19 @@ python ../../tools/sample_size_calculator.py --type II               # 700-C sam
   is **not** part of this package; only the frozen matrices and their analyses are.
 - Files under `data/frozen_matrix/` are **read-only sources of record**. Tools fail closed rather
   than silently recomputing them.
+- **`Scripts/reproduce_all.sh` completes (exit 0), but two of its stages are *registered as
+  skipped*** — they are written to `<out>/99_skipped.txt` and surfaced in the generated report,
+  never silently passed:
+  * **S2 — number re-computation via `docker/paper/run_all.sh`** needs four tools that are *not*
+    shipped in this package (`tools/path_config_625.py`, `tools/stats_672k.py`,
+    `tools/fix_676m_schema.py`, `tools/audit_676k_integrity.py`) plus inputs under
+    `data/experiments/`. That chain belongs to the writing repository. The paper numbers are still
+    covered by `tools/verify_paper_numbers.py` (§2) and by S3.
+  * **S3 — `fast_gate`** bundles three writing-repository gates (`tools/run_658_gate.py`,
+    `tools/run_669d_gate.py`, `tools/guard_rerun_671a.py`) that are not shipped; the stage falls
+    back to `pytest tests/ -q`, which passes (18/18).
+- **Line endings are part of the contract.** `data/frozen_matrix/**` and
+  `data/693_data_manifest.sha256` are pinned to `-text` in `.gitattributes`. Without that pin,
+  `core.autocrlf=true` rewrites **31 of the 49** frozen artifacts on clone (measured:
+  `683_real_world_detection_matrix.json` 247,619 B → 254,404 B) and every sha256 anchor fails.
+  Clone with `git`; do not copy the files by hand.

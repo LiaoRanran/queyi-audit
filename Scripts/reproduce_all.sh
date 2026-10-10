@@ -94,7 +94,15 @@ fi
 
 # ── S2：数字复算（复用 676h 权威口径）────────────────────────────────────
 log "S2 论文数字复算（复用 docker/paper/run_all.sh）"
-if [ -f docker/paper/run_all.sh ]; then
+# 713：run_all.sh 的链条超出本包的声明范围（REPRODUCTION.md §5：本包只发布冻结矩阵
+# 及其分析）。它还需要 4 个**未随包发布**的工具与若干 data/experiments/* 输入，
+# 直接跑必然在 "1. 系统计数" 就 ModuleNotFoundError。这里先做**能力探针**：
+# 前置缺失 ⇒ 显式登记跳过（写入 99_skipped.txt，报告如实呈现），而不是把整条
+# 复现链判失败 —— 也不是静默通过。
+RUNALL_NEEDS="tools/path_config_625.py tools/stats_672k.py tools/fix_676m_schema.py tools/audit_676k_integrity.py"
+RUNALL_MISSING=""
+for _t in $RUNALL_NEEDS; do [ -f "$_t" ] || RUNALL_MISSING="$RUNALL_MISSING $_t"; done
+if [ -f docker/paper/run_all.sh ] && [ -z "$RUNALL_MISSING" ]; then
   # 只跑到"论文数字 vs 权威源"为止；**不**做论文编译（容器里没装 tectonic）
   OUT="$OUT" PY="$PY" bash docker/paper/run_all.sh > "$OUT/20_run_all.log" 2>&1 \
     && { echo "  OK  run_all 通过"; tail -5 "$OUT/20_run_all.log"; } \
@@ -103,8 +111,13 @@ if [ -f docker/paper/run_all.sh ]; then
          grep -q "tectonic 未安装" "$OUT/20_run_all.log" \
            && echo "  ⇒ 判定为 tectonic 缺失（预期内），继续" \
            || fail "run_all 失败且非 tectonic 缺失（见 $OUT/20_run_all.log）"; }
-else
+elif [ ! -f docker/paper/run_all.sh ]; then
   fail "docker/paper/run_all.sh 不存在：无法复算论文数字（不静默跳过）"
+else
+  skip "S2 论文数字复算：docker/paper/run_all.sh 的前置工具未随本包发布（$RUNALL_MISSING）"
+  echo "  ⇒ S2 已登记跳过（见 $OUT/99_skipped.txt）。"
+  echo "     本包可复现的数字面由 S3 门禁与 tools/verify_paper_numbers.py 覆盖；"
+  echo "     run_all.sh 的完整链条需要写作仓库的 tools/ 与 data/experiments/（REPRODUCTION.md §5）。"
 fi
 
 # ── S3：门禁 ────────────────────────────────────────────────────────────
@@ -115,10 +128,23 @@ log "S3 门禁检查"
        echo "  ⇒ 不阻断复现流程，但报告会标记 GATE=FAIL"; GATE_FAIL=1; }
 GATE_FAIL="${GATE_FAIL:-0}"
 
-"$PY" tools/fast_gate.py --tests tests/ > "$OUT/31_fast_gate.txt" 2>&1 \
-  && { echo "  OK  fast_gate"; tail -3 "$OUT/31_fast_gate.txt"; } \
-  || { echo "  fast_gate 退出非 0："; tail -20 "$OUT/31_fast_gate.txt";
-       echo "  ⇒ 不阻断复现流程，但报告会标记 GATE=FAIL"; GATE_FAIL=1; }
+# 713：fast_gate 的默认门禁集里含 3 个**源仓库**脚本（run_658_gate / run_669d_gate /
+# guard_rerun_671a），本包未发布。缺它们时 fast_gate 恒 FAIL（非阻断，但报告会标
+# GATE=FAIL，属误导）。改为先探针：缺失则登记跳过门禁、直接跑 pytest（本包真正能做的）。
+FASTGATE_NEEDS="tools/run_658_gate.py tools/run_669d_gate.py tools/guard_rerun_671a.py"
+FG_MISSING=""
+for _t in $FASTGATE_NEEDS; do [ -f "$_t" ] || FG_MISSING="$FG_MISSING $_t"; done
+if [ -z "$FG_MISSING" ]; then
+  "$PY" tools/fast_gate.py --tests tests/ > "$OUT/31_fast_gate.txt" 2>&1 \
+    && { echo "  OK  fast_gate"; tail -3 "$OUT/31_fast_gate.txt"; } \
+    || { echo "  fast_gate 退出非 0："; tail -20 "$OUT/31_fast_gate.txt";
+         echo "  ⇒ 不阻断复现流程，但报告会标记 GATE=FAIL"; GATE_FAIL=1; }
+else
+  skip "S3 fast_gate 门禁：源仓库门禁脚本未随本包发布（$FG_MISSING）⇒ 退化为 pytest"
+  "$PY" -m pytest tests/ -q > "$OUT/31_fast_gate.txt" 2>&1 \
+    && { echo "  OK  pytest tests/（fast_gate 已登记跳过）"; tail -3 "$OUT/31_fast_gate.txt"; } \
+    || { echo "  pytest 退出非 0："; tail -20 "$OUT/31_fast_gate.txt"; GATE_FAIL=1; }
+fi
 
 # ── S4：验证报告 ────────────────────────────────────────────────────────
 log "S4 生成验证报告"
@@ -138,7 +164,7 @@ END_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "|---|---|---|---|"
   echo "| S0 | 环境体检 | $( [ -f "$OUT/00_environment.txt" ] && echo done || echo skipped ) | \`$OUT/00_environment.txt\` |"
   echo "| S1 | 数据完整性 | $( [ -f "$OUT/10_sha256.txt" ] && echo done || echo 'script-only' ) | \`$OUT/10_*.txt\` |"
-  echo "| S2 | 论文数字复算 | $( [ -f "$OUT/20_run_all.log" ] && echo done || echo missing ) | \`$OUT/20_run_all.log\` |"
+  echo "| S2 | 论文数字复算 | $( [ -f "$OUT/20_run_all.log" ] && echo done || echo 'skipped (registered)') | \`$OUT/20_run_all.log\` |"
   echo "| S3 | 门禁 | $( [ "$GATE_FAIL" = "0" ] && echo PASS || echo FAIL ) | \`$OUT/3*.txt\` |"
   echo
   echo "## 跳过/未执行项"

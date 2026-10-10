@@ -24,6 +24,17 @@ check_eq() {                       # check_eq <actual> <expected> <label>
   log "OK  $3 = $1"
 }
 
+# 713 修复：本复现包把冻结产物集中在 data/frozen_matrix/，而本脚本的路径常量仍写
+# data/<rel>（沿用源仓库布局）。D() 与 tools/*.py::_resolve 同款回退：
+#   data/<rel>  ->  data/frozen_matrix/<rel>  ->  data/frozen_matrix/<basename>
+D() {                              # D <rel-under-data> -> 打印可用的实际路径
+  if [ -f "data/$1" ]; then printf 'data/%s' "$1"; return; fi
+  if [ -f "data/frozen_matrix/$1" ]; then printf 'data/frozen_matrix/%s' "$1"; return; fi
+  _b="${1##*/}"
+  if [ -f "data/frozen_matrix/$_b" ]; then printf 'data/frozen_matrix/%s' "$_b"; return; fi
+  printf 'data/%s' "$1"
+}
+
 log "== 0. 环境自检 =="
 "$PY" --version > "$OUT/00_python.txt" 2>&1 || fail "python 不可用"
 (g++ --version 2>/dev/null || g++-13 --version) | head -1 > "$OUT/01_gxx.txt" || echo "g++: MISSING" > "$OUT/01_gxx.txt"
@@ -34,7 +45,8 @@ log "== 1. 系统计数 =="
 RULES=$("$PY" -c "import sys;sys.path.insert(0,'tools');import gate_engine;print(len(gate_engine.RULES))")
 check_eq "$RULES" 67 "判决规则数 len(RULES)"
 
-LEDGER=$("$PY" -c "print(sum(1 for l in open('data/authority/decision_event_v2_ledger.jsonl',encoding='utf-8') if l.strip()))")
+LEDGER_FILE="$(D authority/decision_event_v2_ledger.jsonl)"
+LEDGER=$("$PY" -c "import sys;print(sum(1 for l in open(sys.argv[1],encoding='utf-8') if l.strip()))" "$LEDGER_FILE")
 check_eq "$LEDGER" 452 "权威账本事件数"
 
 ATOMS=$("$PY" tools/counts_659.py --json | "$PY" -c "import json,sys;print(json.load(sys.stdin)['atoms_real'])")
@@ -47,11 +59,15 @@ echo "规则严重度分解 block/warn/advice = $SEV" | tee "$OUT/10_rule_severi
 log "Verifier Coverage 31/42 的 CP95 = $(cat "$OUT/11_vc_ci.txt")"
 
 log "== 2. 头版检出率重算（从已落盘 reveal 产物读算，不重跑检测器）=="
+# 713：reveal 产物同样经 D() 回退（data/ -> data/frozen_matrix/）
+export H_HOLDOUT="$(D holdout_reveal_5_672h.json)"
+export H_CORPUS="$(D external_corpus_reveal_672h.json)"
 "$PY" - <<'PYEOF' | tee "$OUT/20_headline.txt"
 import json
+import os
 
-h = json.load(open("data/holdout_reveal_5_672h.json", encoding="utf-8"))["cumulative"]
-c = json.load(open("data/external_corpus_reveal_672h.json", encoding="utf-8"))["cumulative"]
+h = json.load(open(os.environ["H_HOLDOUT"], encoding="utf-8"))["cumulative"]
+c = json.load(open(os.environ["H_CORPUS"], encoding="utf-8"))["cumulative"]
 print("holdout  %.1f%% (%d/%d)" % (h["error_subset"]["detect_rate_pct"],
                                   h["error_subset"]["catch"], h["denominator"]["value"]))
 print("corpus   %.1f%% (%d/%d)" % (c["detect_rate_pct"], c["catch"], c["denominator"]["value"]))
@@ -113,7 +129,9 @@ tail -3 "$OUT/41_number_audit.md" >/dev/null 2>&1 || true
 
 log "== 5. 论文编译 =="
 if command -v tectonic >/dev/null 2>&1; then
-  (cd research/latex && tectonic -X compile queyi_neurips2027_v1.1.tex --outdir ../../out) \
+  # 713：本包论文在 paper/paper1/（源仓库布局为 research/latex/）
+  if [ -d paper/paper1 ]; then TEXDIR="paper/paper1"; else TEXDIR="research/latex"; fi
+  (cd "$TEXDIR" && tectonic -X compile queyi_neurips2027_v1.1.tex --outdir ../../out) \
     || fail "论文编译失败"
 else
   echo "tectonic 未安装 ⇒ 跳过编译（本机 v0.17.0；见 REPRODUCE.md §6）" | tee "$OUT/50_build_skipped.txt"
