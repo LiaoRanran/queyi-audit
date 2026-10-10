@@ -236,7 +236,7 @@
 - `coverage_probe_l4_2_632.py` — 632 E1 · 探针 #2：向量 **L4.2 阈值边界歧义**（P1，此前无探针）
 - `coverage_probe_l4_4_632.py` — 632 E1 · 探针 #3：向量 **L4.4 规则优先级冲突**（P1，此前无探针）
 - `coverage_probe_l8_4_631.py` — 631 D2 · 探针 #2：向量 **L8.4 透明日志伪造**（P0，此前无探针）
-- `cppbible.py` — cppbible.py — 《现代 C++ 终极圣经》统一工具链 CLI
+- `queyi-audit.py` — queyi-audit.py — 《现代 C++ 终极圣经》统一工具链 CLI
 - `crlf_convergence_657.py` — crlf_convergence_657.py — 657 D1：行尾（CRLF/LF）漂移的**度量**与**按策略收敛**。
 - `cross_card_attack_624.py` — 624 A1 · 跨卡一致性攻击（H4 策略升级：多卡修改）
 - `cross_toolchain_683.py` — cross_toolchain_683.py — 683-B：跨工具链 / 跨平台检出对比。

@@ -5,8 +5,8 @@
 
 设计要点（ADR-0004 / ADR-0005）：
   * **不另起 CI**：`--gates` 把注册规则导出为 `(name, [cmd...])` 元组，供
-    `cppbible.py:cmd_check` 现有执行循环消费；规则可注册、可插拔。
-  * **收敛双清单**：`--manifest-check` 用 AST 解析 `cppbible.py` 的 quality 元组，
+    `queyi-audit.py:cmd_check` 现有执行循环消费；规则可注册、可插拔。
+  * **收敛双清单**：`--manifest-check` 用 AST 解析 `queyi-audit.py` 的 quality 元组，
     与 `pyproject.toml:quality_gates` 比对，把"两份清单各自漂移"变成可拦项。
   * **四象限**：programmatic（机器可判，进 CI）· llm（语义判定，本轮不接模型 → 人工队列）·
     hybrid（机器初筛 + 人工裁定）· human（纯人工裁定）。
@@ -50,7 +50,7 @@ import tool_integrity  # noqa: E402  567 任务 2：判定核心完整性（入�
 ATOMS = ROOT / "atoms"
 EVIDENCE = ROOT / "evidence"
 PYPROJECT = ROOT / "pyproject.toml"
-CPPBIBLE = ROOT / "tools/cppbible.py"
+QUEYI_AUDIT = ROOT / "tools/queyi-audit.py"
 
 # 16 域（唯一来源：知识地图工具），用于校验原子 ID 中段与目录归属
 from atom_coverage_map import DOMAIN_OF_PREFIX  # noqa: E402
@@ -1321,7 +1321,7 @@ def check_frontmatter_hardening() -> list[Finding]:
       * 信号②③④ 需要 pyyaml；缺它时**不静默跳过**，而是留一条 warn 让"检查没跑"可见
         （"跳过＝永久免检"是 368 P1-2 已确立的反模式；508 的"台账不存在＝永久免检"同源）。
     修前的真实故障：整函数被 `try: import yaml / except ImportError: return []` 罩住，
-    于是"没装 pyyaml 的解释器"连信号①一起丢 ⇒ 527 实测 `cppbible check --stage quality`
+    于是"没装 pyyaml 的解释器"连信号①一起丢 ⇒ 527 实测 `queyi-audit check --stage quality`
     在使用无 pyyaml 解释器时 Poison Drill 报 P43 漏网（82/83），而用 .venv 单跑则 83/83。
     """
     yaml_mod = None
@@ -3397,10 +3397,10 @@ def _misconception_gap() -> list[Finding]:
 
 # ── META：双清单一致性（ADR-0004）──────────────────────────────────────────
 def _cmd_check_quality_gates() -> list[str] | None:
-    """AST 解析 cppbible.py 的 quality 元组 → ['tools/x.py --flag', ...]。"""
-    if not CPPBIBLE.is_file():
+    """AST 解析 queyi-audit.py 的 quality 元组 → ['tools/x.py --flag', ...]。"""
+    if not QUEYI_AUDIT.is_file():
         return None
-    tree = ast.parse(CPPBIBLE.read_text(encoding="utf-8"))
+    tree = ast.parse(QUEYI_AUDIT.read_text(encoding="utf-8"))
     for node in ast.walk(tree):
         test = getattr(node, "test", None)
         if not (isinstance(node, ast.If) and isinstance(test, ast.Compare)
@@ -3426,7 +3426,7 @@ def _cmd_check_quality_gates() -> list[str] | None:
 def check_manifest_consistency() -> list[Finding]:
     exec_list = _cmd_check_quality_gates()
     if exec_list is None:
-        return [Finding("META-MANIFEST", "warn", "tools/cppbible.py",
+        return [Finding("META-MANIFEST", "warn", "tools/queyi-audit.py",
                         "未能解析 quality 元组（AST 结构变了？）", "检查 cmd_check 实现")]
     declared: list[str] = []
     text = PYPROJECT.read_text(encoding="utf-8")
@@ -3441,7 +3441,7 @@ def check_manifest_consistency() -> list[Finding]:
                                "补进 pyproject:quality_gates（收敛双清单，ADR-0004）"))
     for cmd in declared:
         if cmd not in exec_list:
-            out.append(Finding("META-MANIFEST", "warn", "tools/cppbible.py",
+            out.append(Finding("META-MANIFEST", "warn", "tools/queyi-audit.py",
                                f"清单有但执行器缺：{cmd}",
                                "补进 cmd_check 元组或从清单删除"))
     return out
@@ -3868,7 +3868,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 0
 
 
-PYTHON_EXE = sys.executable    # 与 cppbible 侧 PYTHON_EXE 语义一致（--gates 输出用）
+PYTHON_EXE = sys.executable    # 与 queyi-audit 侧 PYTHON_EXE 语义一致（--gates 输出用）
 
 if __name__ == "__main__":
     raise SystemExit(main())
