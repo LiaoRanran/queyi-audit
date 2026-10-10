@@ -3,7 +3,9 @@
 > **Anonymous submission package.** This repository accompanies two papers on *measurement drift* in
 > software-verification evaluation. It contains the frozen artifacts, the analysis tools, and the
 > LaTeX sources needed to reproduce every number. It is distributed under Apache-2.0 and is
-> **double-blind**: it contains no author names, affiliations, e-mails or personal identifiers.
+> **double-blind**: no author name, affiliation, e-mail or source-repository identifier appears
+> in its files, commit messages or URLs; build-host temporary paths inside the frozen matrices
+> were deliberately left byte-identical so that every sha256 anchor stays verifiable.
 
 ## What this is
 
