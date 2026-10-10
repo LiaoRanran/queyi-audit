@@ -46,6 +46,7 @@ These are the defects the clean-clone run *found*; each one was reproduced befor
 | host absolute paths inside the shipped annotation key | 41 rows leaked `<drive>:\...\<upstream-root>\...` | text-level sanitisation to `upstream-root/<relative>`; semantics verified unchanged |
 | `paper_sync_check` traced back with `FileNotFoundError` | confusing failure | prints `NOT_APPLICABLE` + exits 0, declared in `REPRODUCTION.md` §4 |
 | README claimed "no personal identifiers" while host paths were present | a false anonymity claim | replaced with a verifiable statement |
+| three documents pointed at files that were never packaged | `data/annotation_package/README.md` → `../702_annotation_table.csv`; `data/raw_external/README.md` → `../../../data/701_new_project_defects.json` and `../../701_build_results.md` — all three unfollowable | the three artifacts are now packaged |
 
 ## What is still out of scope (declared, not hidden)
 

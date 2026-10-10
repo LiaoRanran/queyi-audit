@@ -1,5 +1,21 @@
 # Queyi Audit — a reproducibility package for auditing the evaluator
 
+**30-second version.** Clone it, run one command, read the exit code:
+
+```bash
+git clone <this-repo> queyi-audit && cd queyi-audit
+python tools/verify_paper_numbers.py \
+    --tex paper/paper1/queyi_neurips2027_v1.1.tex \
+    --tex-extra paper/paper1/supplementary/paper_appendix_extras.tex
+# -> "检察 124 条；missing 0；consistent 112"   and exit code 0
+```
+
+That single command re-derives the headline numbers of paper 1 from the **frozen matrices** in
+`data/frozen_matrix/`, read-only — no detector is re-run, nothing is written except a report.
+`REPRODUCTION_LOG.md` records the **measured** exit code of every other command in
+`REPRODUCTION.md`, including the one that is non-zero on purpose. If you only want to find a
+defect in this package, start there: it has already found ten (listed in `REPRODUCTION_LOG.md`).
+
 > **Anonymous submission package.** This repository accompanies two papers on *measurement drift* in
 > software-verification evaluation. It contains the frozen artifacts, the analysis tools, and the
 > LaTeX sources needed to reproduce every number. It is distributed under Apache-2.0 and is
