@@ -28,8 +28,22 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MD = os.path.join(ROOT, "research", "paper_shturl.md")
-TEX = os.path.join(ROOT, "research", "latex", "queyi_neurips2027_v1.1.tex")
+
+
+def _pick(*cands: str) -> str:
+    for c in cands:
+        if os.path.exists(c):
+            return c
+    return cands[0]
+
+
+# 712：本复现包不含 Markdown 主稿（`research/paper_shturl.md` 只存在于写作仓库），
+# 因此 TEX 走 fallback，MD 缺失时由 main() 输出「不适用」并**跳过**，
+# 而不是抛 FileNotFoundError —— REPRODUCTION.md 明确说明该检查在本包中不适用。
+MD = _pick(os.path.join(ROOT, "research", "paper_shturl.md"),
+           os.path.join(ROOT, "paper", "paper1", "paper_shturl.md"))
+TEX = _pick(os.path.join(ROOT, "research", "latex", "queyi_neurips2027_v1.1.tex"),
+            os.path.join(ROOT, "paper", "paper1", "queyi_neurips2027_v1.1.tex"))
 
 # (name, [tokens]) —— 每个 token 必须在两边都出现（token 已做规范化后的字面量）
 # 语言分叉项用 (name, tokens_md, tokens_tex) 三元组。
@@ -171,6 +185,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="markdown↔LaTeX 数字一致性检查（670c2 B1）")
     ap.add_argument("--json", action="store_true", help="输出 JSON")
     args = ap.parse_args()
+
+    # 712：本包不含 Markdown 主稿 ⇒ 该检查不适用（不是失败，也不是静默跳过）。
+    if not os.path.isfile(MD):
+        print(f"[paper-sync] NOT_APPLICABLE：未找到 Markdown 主稿 `{MD}`。")
+        print("[paper-sync] 本复现包只发布 LaTeX 稿；markdown↔LaTeX 同步检查"
+              "需要写作仓库（源仓库），不属于本包可复现范围（见 REPRODUCTION.md §4）。")
+        return 0
 
     res = check()
     if args.json:

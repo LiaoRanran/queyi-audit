@@ -12,3 +12,11 @@
 .mypy_cache/
 .ruff_cache/
 build/
+
+# 713: regenerable side-effect outputs of the REPRODUCTION.md §4 paper-2 checks.
+# They carry a `generated_at` timestamp (non-deterministic) and nothing reads them
+# back, so they are excluded to keep the tree clean; the number-of-record outputs
+# (data/paper{1,2}_numbers.json, data/693_data_manifest.*, data/676h_data_integrity.json)
+# remain tracked.
+data/707_axiom_independence_test.json
+data/707_zero_cost_landing_validation.json

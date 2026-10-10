@@ -31,13 +31,33 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEX = os.path.join(ROOT, "research", "latex", "queyi_neurips2027_v1.1.tex")
-HOLDOUT = os.path.join(ROOT, "data", "holdout_reveal_3_665.json")
-EXTERNAL = os.path.join(ROOT, "data", "external_corpus_reveal_665.json")
+
+
+def _pick(*cands: str) -> str:
+    """712：本复现包的布局与源仓库不同（论文在 `paper/paper1/`、冻结产物在
+    `data/frozen_matrix/`），原硬编码路径会让本脚本直接 FileNotFoundError。
+    按候选顺序取第一个存在的路径；都不存在时返回第一个以保持原有报错信息。"""
+    for c in cands:
+        if os.path.exists(c):
+            return c
+    return cands[0]
+
+
+def _data(name: str, *sub: str) -> str:
+    rel = os.path.join(*sub, name) if sub else name
+    return _pick(os.path.join(ROOT, "data", rel),
+                 os.path.join(ROOT, "data", "frozen_matrix", rel),
+                 os.path.join(ROOT, "data", "frozen_matrix", name))
+
+
+TEX = _pick(os.path.join(ROOT, "research", "latex", "queyi_neurips2027_v1.1.tex"),
+            os.path.join(ROOT, "paper", "paper1", "queyi_neurips2027_v1.1.tex"))
+HOLDOUT = _data("holdout_reveal_3_665.json")
+EXTERNAL = _data("external_corpus_reveal_665.json")
 # 671a 扩样后的权威源（reveal_update_672h.json::holdout.after / corpus.after）；
 # 自 671b 起 Fig.3 的期望值以此为准，665 旧产物仅作 Fig.4 历史出处。
-REVEAL_UPDATE = os.path.join(ROOT, "data", "experiments", "reveal_update_672h.json")
-RETRO = os.path.join(ROOT, "docs", "667_回溯反思.md")
+REVEAL_UPDATE = _data("reveal_update_672h.json", "experiments")
+RETRO = _pick(os.path.join(ROOT, "docs", "667_回溯反思.md"))
 
 COORD_RE = re.compile(r"coordinates\s*\{([^}]*)\}")
 PAIR_RE = re.compile(r"\(([^,]+),\s*([0-9.]+)\)")

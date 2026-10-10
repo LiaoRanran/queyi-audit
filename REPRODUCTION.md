@@ -16,18 +16,38 @@ read-only with respect to them.
 Setup:
 
 ```bash
-python -m pip install -r requirements.txt   # if present; otherwise the stdlib suffices
+python -m pip install -r requirements.txt   # pytest is the only third-party requirement
 bash Scripts/verify_environment.sh --report # environment health check (reports, never blocks)
 ```
+
+**Line endings.** The shell scripts are pinned to LF by `.gitattributes`
+(`*.sh text eol=lf`), so they stay executable on Bash-under-Windows too. If you
+copied files by hand instead of cloning and see
+`set: pipefail: invalid option name` / `$'\r': command not found`, your copy has
+CRLF line endings.
+
+**Every command below was executed from a clean clone**; the measured exit code of
+each step is recorded in the package's own reproducibility log (see
+`REPRODUCTION_LOG.md`).
+
 
 ## 2. One-shot reproduction
 
 ```bash
-# numbers of record, both papers
+# numbers of record, paper 1 (empirical audit; exits 0 iff all required numbers trace out)
 python tools/verify_paper_numbers.py \
     --tex paper/paper1/queyi_neurips2027_v1.1.tex \
     --tex-extra paper/paper1/supplementary/paper_appendix_extras.tex \
     --out-json data/paper1_numbers.json --out-md data/paper1_numbers_report.md
+
+# paper 2 (theory / boundaries): the same scanner can point --tex at paper 2 and
+# extracts/classifies its number tokens, but its "required numbers" checklist is
+# hard-wired to paper 1's empirical arms, so paper 2 exits non-zero by design
+# (it reports 44 consistent mappings + the paper-1 numbers that do not appear).
+# Treat the emitted JSON/MD as an extraction report, not a pass/fail gate.
+python tools/verify_paper_numbers.py \
+    --tex paper/paper2/paper2_measurement_drift.tex \
+    --out-json data/paper2_numbers.json --out-md data/paper2_numbers_report.md
 
 # integrity of the frozen artifacts
 python tools/gen_693_manifest.py --check
@@ -67,8 +87,8 @@ Paper 2 (boundaries):
 # Paper 1
 cd paper/paper1 && tectonic queyi_neurips2027_v1.1.tex --keep-logs   # main text <= 9 pages
 python ../../tools/paper_quality_gate_670c2.py                      # 6/6 gate
-python ../../tools/paper_sync_check_670c2.py                        # markdown <-> LaTeX sync
 python ../../tools/figure_data_check_670c2.py                       # figure provenance
+python ../../tools/paper_sync_check_670c2.py                        # see NOTE below
 
 # Paper 2
 cd paper/paper2 && tectonic paper2_measurement_drift.tex --keep-logs # main text <= 9 pages
@@ -76,6 +96,13 @@ python ../../tools/test_axiom_independence.py                       # 700-A clas
 python ../../tools/asset_capabilities.py --validate                 # P1/P2/P3 on frozen matrices
 python ../../tools/sample_size_calculator.py --type II               # 700-C sample sizes
 ```
+
+> **NOTE — `paper_sync_check_670c2.py` is NOT_APPLICABLE in this package.**
+> It cross-checks the LaTeX sources against a **Markdown master** (`research/paper_shturl.md`)
+> that belongs to the writing repository and is *not* part of the anonymous package.
+> The script therefore prints `NOT_APPLICABLE` and exits 0 instead of raising
+> `FileNotFoundError`. Reported for transparency, not as a passing check.
+
 
 ## 5. Known limits of this package
 

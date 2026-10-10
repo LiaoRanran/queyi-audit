@@ -40,6 +40,7 @@ TARGETS: tuple[tuple[str, str], ...] = (
     ("data/676m_a5_matrix_corrected.json", "676m A5 修正矩阵"),
     ("data/a5_676f_detection_matrix.json", "A5 全量检测矩阵"),
     ("data/676m_sample_manifest_corrected.json", "34 类规范词表 + 样本清单"),
+    ("data/a5_676f_sample_manifest.json", "A5 全量样本清单（1137，content_md5/split）"),
     ("data/681_type_stats_normalized.json", "34 类归一化类型统计（n=1147）"),
     ("data/683_real_world_detection_matrix.json", "真实世界检测矩阵"),
     ("data/683_real_world_project_matrix.json", "真实世界项目矩阵"),
@@ -51,6 +52,27 @@ TARGETS: tuple[tuple[str, str], ...] = (
     ("data/external_corpus_reveal_672h.json", "外部语料 reveal 产物"),
     ("data/authority/decision_event_v2_ledger.jsonl", "权威判决账本（452 事件）"),
 )
+
+
+def _resolve(rel: str) -> Path | None:
+    """把清单里的逻辑路径解析到实际文件。
+
+    712 修复：本复现包把冻结产物集中在 `data/frozen_matrix/`，而清单里的 TARGETS
+    仍写 `data/<name>`（沿用源仓库布局）。此前 `--check` 直接 `ROOT / rel`，
+    于是 14 项全部"缺失"、清单本身又不存在 ⇒ REPRODUCTION.md 里这条命令必然失败。
+    这里按「原路径 → data/frozen_matrix/<tail> → data/frozen_matrix/<basename>」依次回退，
+    与 `tools/verify_paper_numbers.py::_p()` 同款，保证两个仓库都能跑。
+    """
+    p = ROOT / rel
+    if p.exists():
+        return p
+    if rel.startswith("data/"):
+        tail = rel[len("data/"):]
+        for alt in (ROOT / "data" / "frozen_matrix" / tail,
+                    ROOT / "data" / "frozen_matrix" / Path(tail).name):
+            if alt.exists():
+                return alt
+    return None
 
 
 def _sha256(path: Path) -> str:
@@ -69,25 +91,32 @@ def main() -> None:
     rows: list[tuple[str, str, int]] = []
     missing: list[str] = []
     for rel, _desc in TARGETS:
-        p = ROOT / rel
-        if not p.exists():
+        p = _resolve(rel)
+        if p is None:
             missing.append(rel)
             continue
-        rows.append((_sha256(p), rel, p.stat().st_size))
+        # 清单里写**实际**相对路径（而非逻辑路径），这样 sha256sum -c 也能直接用
+        rows.append((_sha256(p), p.relative_to(ROOT).as_posix(), p.stat().st_size))
 
     if args.check:
         if not OUT.exists():
-            raise SystemExit(f"[693-B2] 清单不存在：{OUT}")
+            raise SystemExit(
+                f"[693-B2] 清单不存在：{OUT}\n"
+                f"        先运行：python tools/gen_693_manifest.py"
+            )
         bad = 0
+        n = 0
         for line in OUT.read_text(encoding="utf-8").splitlines():
             if not line.strip() or line.startswith("#"):
                 continue
             exp, rel = line.split("  ", 1)
-            p = ROOT / rel
-            if not p.exists() or _sha256(p) != exp:
+            p = _resolve(rel)
+            n += 1
+            if p is None or _sha256(p) != exp:
                 print(f"  MISMATCH {rel}")
                 bad += 1
-        print(f"[693-B2] 校验完成：{len(rows)} 项，失配 {bad} 项，缺失 {len(missing)} 项")
+        print(f"[693-B2] 校验完成：清单 {n} 项（本次可解析 {len(rows)} 项），"
+              f"失配 {bad} 项，缺失 {len(missing)} 项")
         if bad or missing:
             raise SystemExit(1)
         return

@@ -10,6 +10,11 @@
   6. 可选：对仍能定位到源文件的样本，重算 md5 比对。
 
 只读；不修改任何 data/ 产物（只写自己的报告）。
+
+713 修复：输入路径改为经 `resolve()` 回退到 `data/frozen_matrix/`（本包的实际布局），
+并把 A5 全量样本清单 `a5_676f_sample_manifest.json`（1137 条，含 content_md5/split）
+补入包内 —— 此前该输入未随包发布，本脚本在包内**必然**以"清单缺失"退出 1，
+连带 `Scripts/reproduce_all.sh` 的 S1 阶段判失败。
 """
 from __future__ import annotations
 
@@ -26,9 +31,31 @@ BLINDSPOT = "data/blindspot_676g_stats.json"
 OUT_JSON = "data/676h_data_integrity.json"
 
 
+def resolve(rel: str) -> str | None:
+    """把逻辑路径解析到实际文件（713 修复）。
+
+    本复现包把冻结产物集中在 `data/frozen_matrix/`，而本脚本的常量仍写
+    `data/<name>`（沿用源仓库布局）。此前 `load()` 直接拼 `ROOT/<rel>`，
+    于是三个输入全部"缺失"、脚本以 `[integrity] FAIL 清单缺失` 退出 1 ——
+    而 `Scripts/reproduce_all.sh` 的 S1 会因此把整条复现链判失败。
+    这里按「原路径 → data/frozen_matrix/<tail> → data/frozen_matrix/<basename>」
+    依次回退，与 `tools/gen_693_manifest.py::_resolve` 同款（统一数据索引）。
+    """
+    p = os.path.join(ROOT, rel.replace("/", os.sep))
+    if os.path.exists(p):
+        return p
+    if rel.startswith("data/"):
+        tail = rel[len("data/"):].replace("/", os.sep)
+        for alt in (os.path.join(ROOT, "data", "frozen_matrix", tail),
+                    os.path.join(ROOT, "data", "frozen_matrix", os.path.basename(tail))):
+            if os.path.exists(alt):
+                return alt
+    return None
+
+
 def load(rel):
-    path = os.path.join(ROOT, rel.replace("/", os.sep))
-    if not os.path.exists(path):
+    path = resolve(rel)
+    if path is None:
         return None
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
@@ -63,7 +90,8 @@ def main() -> int:
         checks.append({"id": cid, "name": name, "ok": bool(ok), "detail": detail})
 
     if not man:
-        check("D0", "676f 样本清单存在", False, f"缺失 {MANIFEST}")
+        check("D0", "676f 样本清单存在", False,
+              f"缺失 {MANIFEST}（已按 data/ → data/frozen_matrix/ 回退查找）")
         report = {"schema": "queyi-data-integrity/676h", "checks": checks, "verdict": "fail"}
         with open(os.path.join(ROOT, OUT_JSON.replace("/", os.sep)), "w", encoding="utf-8") as fh:
             json.dump(report, fh, ensure_ascii=False, indent=1)

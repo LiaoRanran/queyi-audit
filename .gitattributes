@@ -1,0 +1,33 @@
+# 712：复现包的行尾契约。
+#
+# 问题（实测，2026-10-10）：本包在 Windows 上 clone 时，若依赖 `core.autocrlf=true`，
+# `Scripts/*.sh` 会被检出为 CRLF，于是 `bash Scripts/verify_environment.sh --report`
+# 直接炸在 `set -euo pipefail\r` 上：
+#     line 18: set: pipefail : invalid option name
+#     line 19: $'\r': command not found
+# 复现脚本在 Linux/CI 上正常、在 Windows 上必挂 —— 这本身就是"复现路径不对齐"。
+# 因此对 shell 脚本**钉死 LF**，与平台和本机 autocrlf 设置无关。
+#
+# 刻意**不**对数据文件设 `text=auto`：`data/frozen_matrix/` 下的产物是按字节
+# 锚定 sha256 的（见 tools/gen_693_manifest.py），任何自动行尾转换都会破坏校验。
+
+*.sh    text eol=lf
+*.bash  text eol=lf
+.github/workflows/*.yml  text eol=lf
+
+# 二进制/冻结产物：不做任何转换
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.zip   binary
+*.gz    binary
+
+# 713：上面"不设 text=auto"并不足够 —— 在没有显式属性时，git 仍会套用本机
+# `core.autocrlf`。实测（Windows，autocrlf=true）：干净 clone 里 49 个冻结产物
+# 有 **31 个**字节与工作树不同（例：683_real_world_detection_matrix.json
+# 247619 B → 254404 B），于是 `data/693_data_manifest.sha256` 的锚定在 clone 上
+# 必然失配、`Scripts/reproduce_all.sh` 的 S1 sha256 阶段必挂。
+# 冻结产物与清单**必须显式 `-text`**（关闭一切行尾转换），否则"按字节锚定"是空话。
+data/frozen_matrix/**          -text
+data/693_data_manifest.sha256  -text
+data/693_data_manifest.json    -text

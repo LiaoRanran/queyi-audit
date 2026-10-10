@@ -1,0 +1,52 @@
+# =====================================================================
+# CI for queyi-audit (anonymous reproduction package)
+#
+# Scope (deliberately narrow):
+#   * run the unit tests under tests/
+#   * re-audit paper-1 numbers against the frozen matrices
+#
+# Out of scope (by design, per REPRODUCTION.md "Known limits"):
+#   * no detector / detect() re-run — data/frozen_matrix/ is read-only
+#   * no Docker build, no LaTeX/tectonic compile
+# =====================================================================
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        # The CI-reachable import chain (tests/ + tools/verify_paper_numbers.py)
+        # uses only the stdlib plus pytest; requirements.txt therefore lists
+        # pytest as the sole third-party dependency.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python -m pytest tests/ -q
+
+      - name: Audit paper-1 numbers against frozen matrices
+        # Read-only with respect to data/frozen_matrix/. Exits 0 iff every
+        # required empirical number in paper 1 is traceable to a frozen artifact.
+        run: >
+          python tools/verify_paper_numbers.py
+          --tex paper/paper1/queyi_neurips2027_v1.1.tex
+          --tex-extra paper/paper1/supplementary/paper_appendix_extras.tex
+          --out-json data/paper1_numbers.json
+          --out-md data/paper1_numbers_report.md

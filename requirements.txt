@@ -1,0 +1,13 @@
+# Reproduction-package dependencies (CI / local re-run).
+#
+# Only the CI-reachable surface is exercised by this package:
+#   * tests/        -> tools/{asset_capabilities,audit_protocol,
+#                           check_drift_correctability,sample_size_calculator,
+#                           test_axiom_independence,utils}
+#   * tools/verify_paper_numbers.py
+#
+# The import chain of the above was audited: everything else (argparse, json,
+# math, re, pathlib, hashlib, logging, statistics, bisect, ...) is Python's
+# standard library. No PyYAML / matplotlib / numpy / requests import is reached
+# on this path. pytest is the sole third-party requirement.
+pytest>=7.0

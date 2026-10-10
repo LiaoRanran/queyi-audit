@@ -42,13 +42,13 @@ echo "=================================================================="
 # ----------------------------------------------------------------------
 echo
 echo "=== Exp 1: A5 主端点增益 (+24.03pp) ==="
-if [ -f tools/recompute_a5_676f.py ] && [ -f data/a5_676f_detection_matrix.json ]; then
+if [ -f tools/recompute_a5_676f.py ] && [ -f data/frozen_matrix/a5_676f_detection_matrix.json ]; then
   if "$PY" tools/recompute_a5_676f.py >/tmp/704_a5.log 2>&1; then
     # 复算脚本已断言 R1（四臂 catch 数从原始矩阵逐位可重算：FD 309 / Random 173 / n=566）。
     # 再从 results 取主端点增益 +24.03pp 做显式核验：
     if "$PY" - <<'PY'
 import json
-res=json.load(open('data/a5_676f_results.json',encoding='utf-8'))
+res=json.load(open('data/frozen_matrix/a5_676f_results.json',encoding='utf-8'))
 p=res['primary_main_8candidates']['primary']
 delta=p['delta_fd_minus_random_pp']          # 期望 ~24.0283
 fd_rate=p['fd_rate_pct']; rnd_rate=p['random_rate_pct']
@@ -60,17 +60,17 @@ print(f"  FD={fd_catch}/{n}  Random={rnd_catch}/{n}  Δ(FD−Random)=+{delta:.2f
 PY
     then ok "A5: FD−Random = +24.03pp（309/566 vs 173/566）"; else no "A5: +24.03pp 核验失败（见 /tmp/704_a5.log）"; fi
   else no "A5: recompute_a5_676f.py 非零退出"; fi
-else no "A5: 缺少 recompute_a5_676f.py 或 data/a5_676f_detection_matrix.json"; fi
+else no "A5: 缺少 recompute_a5_676f.py 或 data/frozen_matrix/a5_676f_detection_matrix.json"; fi
 
 # ----------------------------------------------------------------------
 # Exp 2: 环境画像敏感性（703 零成本验证 P2）→ 期望 60.07% → 24.74%
 # ----------------------------------------------------------------------
 echo
 echo "=== Exp 2: 环境画像敏感性 (60.07% → 24.74%) ==="
-if [ -f data/703_zero_cost_validation.json ]; then
+if [ -f data/frozen_matrix/703_zero_cost_validation.json ]; then
   if "$PY" - <<'PY'
 import json
-d=json.load(open('data/703_zero_cost_validation.json',encoding='utf-8'))['P2_aware_accounting']
+d=json.load(open('data/frozen_matrix/703_zero_cost_validation.json',encoding='utf-8'))['P2_aware_accounting']
 e1=d['E1']['catch_rate_pct']; e2=d['E2_unaware']['catch_rate_pct']; dl=d['delta_catch_rate_unaware_pp']
 assert abs(e1-60.0707)<0.01, f"E1={e1}"
 assert abs(e2-24.735)<0.01, f"E2={e2}"
@@ -78,23 +78,23 @@ assert abs(dl-(-35.3357))<0.01, f"Δ={dl}"
 print(f"  E1(WSL满能力)={e1:.4f}%  E2_unaware(native缺失)={e2:.4f}%  Δ={dl:.4f}pp")
 PY
   then ok "环境感知: 60.07% → 24.74%（Δ −35.34pp）confirmed"; else no "环境感知: 数字与期望不符"; fi
-else no "环境感知: 缺少 data/703_zero_cost_validation.json"; fi
+else no "环境感知: 缺少 data/frozen_matrix/703_zero_cost_validation.json"; fi
 
 # ----------------------------------------------------------------------
 # Exp 3: 真实 CVE 重构检出率（683 真实靶场）→ 期望 59.09% (65/110)
 # ----------------------------------------------------------------------
 echo
 echo "=== Exp 3: 真实 CVE 重构检出率 (59.09% = 65/110) ==="
-if [ -f data/683_real_world_detection_matrix.json ]; then
+if [ -f data/frozen_matrix/683_real_world_detection_matrix.json ]; then
   if "$PY" - <<'PY'
 import json
-d=json.load(open('data/683_real_world_detection_matrix.json',encoding='utf-8'))
+d=json.load(open('data/frozen_matrix/683_real_world_detection_matrix.json',encoding='utf-8'))
 r=d['or_catch_rate_pct']; c=d.get('or_catch',d.get('catch')); n=d.get('or_total',d.get('total'))
 assert abs(r-59.0909)<0.01, f"rate={r}"
 print(f"  真实靶场 OR 检出率 = {r:.4f}% (期望 59.09% = 65/110)")
 PY
   then ok "真实CVE: 59.09%（65/110）confirmed"; else no "真实CVE: 数字与期望不符"; fi
-else no "真实CVE: 缺少 data/683_real_world_detection_matrix.json"; fi
+else no "真实CVE: 缺少 data/frozen_matrix/683_real_world_detection_matrix.json"; fi
 
 # ----------------------------------------------------------------------
 echo

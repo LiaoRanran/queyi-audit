@@ -25,11 +25,34 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LATEX = os.path.join(ROOT, "research", "latex")
+
+
+def _first_dir(*cands: str) -> str:
+    """712：原路径 `research/latex` 只存在于源仓库；本复现包把论文放在 `paper/paper1/`。
+    按候选顺序取第一个存在的目录（都不存在时返回第一个，让后续报错保持原样）。"""
+    for c in cands:
+        if os.path.isdir(c):
+            return c
+    return cands[0]
+
+
+def _first_file(*cands: str) -> str:
+    for c in cands:
+        if os.path.isfile(c):
+            return c
+    return cands[0]
+
+
+LATEX = _first_dir(os.path.join(ROOT, "research", "latex"),
+                   os.path.join(ROOT, "paper", "paper1"))
 TEX = os.path.join(LATEX, "queyi_neurips2027_v1.1.tex")
 AUX = os.path.join(LATEX, "queyi_neurips2027_v1.1.aux")
 LOG = os.path.join(LATEX, "queyi_neurips2027_v1.1.log")
-ABLATION_PLAN = os.path.join(ROOT, "data", "experiments", "ablation_plan_671b.json")
+ABLATION_PLAN = _first_file(
+    os.path.join(ROOT, "data", "experiments", "ablation_plan_671b.json"),
+    os.path.join(ROOT, "data", "frozen_matrix", "experiments", "ablation_plan_671b.json"),
+    os.path.join(ROOT, "data", "frozen_matrix", "ablation_plan_671b.json"),
+)
 
 MAIN_PAGE_LIMIT = 9
 ABSTRACT_WORD_LIMIT = 250
